@@ -101,3 +101,7 @@ mod tests {
     }
 
 }
+
+
+fn main() {
+}

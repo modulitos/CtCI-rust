@@ -38,9 +38,7 @@ fn is_palindrome_perm(s: &str) -> bool {
     for value in map.values() {
         if value % 2 != 0 {
             odd_counts += 1;
-            if is_even {
-                return false;
-            } else if odd_counts > 1 {
+            if is_even || odd_counts > 1 {
                 return false;
             };
         }
@@ -68,9 +66,14 @@ fn is_palindrome_perm_bitv(s: &str) -> bool {
 
         // toggle the bit (using exclusive or):
         bitv ^= 1 << int_char;
-        println!("c: {}, int_char: {}, bitv: {}", c, int_char, format!("{:b}", bitv));
+        println!(
+            "c: {}, int_char: {}, bitv: {}",
+            c,
+            int_char,
+            format!("{:b}", bitv)
+        );
     }
-    bitv & bitv - 1 == 0
+    bitv & (bitv - 1) == 0
 }
 
 #[cfg(test)]
@@ -99,3 +102,5 @@ mod tests {
     }
 
 }
+
+fn main() {}

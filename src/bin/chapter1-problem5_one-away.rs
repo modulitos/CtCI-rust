@@ -57,7 +57,7 @@ fn is_one_away(s1: &str, s2: &str) -> bool {
         }
         return true;
     }
-    return false;
+    false
 }
 
 #[cfg(test)]
@@ -84,4 +84,7 @@ mod tests {
     fn test_4() {
         assert_eq!(is_one_away("pale", "bake"), false);
     }
+}
+
+fn main() {
 }

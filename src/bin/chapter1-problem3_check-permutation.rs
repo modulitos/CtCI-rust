@@ -17,7 +17,7 @@ fn count_chars(s: &str) -> HashMap<char, i32> {
             map.insert(c, 1);
         }
     }
-    return map;
+    map
 }
 
 fn check_perm(s1: &str, s2: &str) -> bool {
@@ -37,7 +37,7 @@ fn check_perm(s1: &str, s2: &str) -> bool {
             return false;
         }
     }
-    return true;
+    true
 }
 
 // doing with with only 1 hashmap
@@ -59,7 +59,7 @@ fn check_perm_alt(s1: &str, s2: &str) -> bool {
             return false;
         }
     }
-    return true;
+    true
 }
 
 #[cfg(test)]
@@ -119,3 +119,5 @@ mod tests {
     }
 
 }
+
+fn main() {}
