@@ -103,4 +103,7 @@ mod tests {
 
 }
 
-fn main() {}
+fn main() {
+    is_palindrome_perm("Mr waldos jackson");
+    is_palindrome_perm_bitv("Mr waldos jackson");
+}

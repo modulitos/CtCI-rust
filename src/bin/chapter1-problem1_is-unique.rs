@@ -104,4 +104,7 @@ mod tests {
 
 
 fn main() {
+    is_unique("asdf");
+    is_unique_raw("asdf");
+    is_unique_part_b("asdf");
 }

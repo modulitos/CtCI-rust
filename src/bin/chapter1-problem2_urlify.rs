@@ -43,4 +43,6 @@ mod tests {
 
 }
 
-fn main() {}
+fn main() {
+    urlify("Mr John Smith    ", 13);
+}

@@ -120,4 +120,7 @@ mod tests {
 
 }
 
-fn main() {}
+fn main() {
+    check_perm("asdf", "safd");
+    check_perm_alt("asdf", "asfd");
+}
