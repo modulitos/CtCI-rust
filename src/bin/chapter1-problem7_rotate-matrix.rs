@@ -92,7 +92,7 @@ fn rotate_matrix_CTCI(matrix: Image) -> Image {
             println!("iterating! first: {}, i: {}", first, i);
 
             let top = matrix[first][i]; // save top
-            // left -> top
+                                        // left -> top
             matrix[first][i] = matrix[last - offset][first];
             // bottom -> left
             matrix[last - offset][first] = matrix[last][last - offset];
