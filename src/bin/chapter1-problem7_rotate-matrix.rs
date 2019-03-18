@@ -40,8 +40,9 @@ impl DivRoundUp for usize {
     }
 }
 
-#[allow(dead_code)]
-fn rotate_matrix_old<'a>(matrix: &'a mut [&'a mut [u32]]) -> &'a mut [&'a mut [u32]] {
+type Image<'a> = &'a mut [&'a mut [u32]];
+
+fn rotate_matrix(matrix: Image) -> Image {
     if matrix.len() != matrix[0].len() {
         panic!("matrix is not NxN!");
     }
@@ -73,7 +74,8 @@ fn rotate_matrix_old<'a>(matrix: &'a mut [&'a mut [u32]]) -> &'a mut [&'a mut [u
 }
 
 // CTCI solution:
-fn rotate_matrix<'a>(matrix: &'a mut [&'a mut [u32]]) -> &'a mut [&'a mut [u32]] {
+#[allow(dead_code)]
+fn rotate_matrix_CTCI(matrix: Image) -> Image {
     if matrix.len() != matrix[0].len() {
         panic!("matrix is not NxN!");
     }
