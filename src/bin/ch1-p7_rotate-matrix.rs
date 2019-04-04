@@ -75,7 +75,7 @@ fn rotate_matrix(matrix: Image) -> Image {
 
 // CTCI solution:
 #[allow(dead_code)]
-fn rotate_matrix_CTCI(matrix: Image) -> Image {
+fn rotate_matrix_ctci(matrix: Image) -> Image {
     if matrix.len() != matrix[0].len() {
         panic!("matrix is not NxN!");
     }
@@ -142,4 +142,6 @@ mod tests {
     }
 }
 
-fn main() {}
+fn main() {
+    rotate_matrix(&mut [&mut [1, 2, 3], &mut [4, 5, 6], &mut [7, 8, 9]]);
+}

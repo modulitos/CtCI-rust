@@ -34,7 +34,7 @@ fn get_compressed_length(s: &str) -> usize {
             prev = Some(c);
         }
     }
-    if let Some(_) = prev {
+    if prev.is_some() {
         length += 1;
         length += (count / 10) + 1;
     }
@@ -73,11 +73,11 @@ fn compress(s: &str) -> String {
         count.to_string().chars().for_each(|ic| compressed.push(ic));
     }
 
-    return if compressed.len() > s.len() {
+    if compressed.len() > s.len() {
         s.to_string()
     } else {
         compressed
-    };
+    }
 }
 
 #[cfg(test)]
