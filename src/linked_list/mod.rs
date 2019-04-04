@@ -6,9 +6,11 @@ pub mod third;
 // pervasively mutable garbage collected language that can't collect
 // cycles! Y-yaaaaay...
 pub mod fourth;
-// unsafe version:
-pub mod fifth;
-// official lib:
-// pub mod official;
 
+// Brandon's implementation - similar to fourth, using Rc and RefCell:
 pub mod brandon;
+
+// unsafe version, which is closest to the official implementation,
+// and how linked lists *should* be implemented, but I ran into some
+// bugs that I couldn't resolve...
+pub mod fifth;
