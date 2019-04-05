@@ -73,21 +73,32 @@ where
     //             let raw_curr: *mut _ = &mut *(curr.unwrap());
 
     //             unsafe {
-    //                 let next = &(*raw_curr).next;
-    //                 if next.is_some() {
-    //                     // COMPILE ERROR: cannot move out of dereference of raw pointer:
-    //                     (*raw_prev).next = (*raw_curr).next;
-    //                     // COMPILE ERROR: cannot move out of dereference of raw pointer:
-    //                     curr = (*raw_curr).next;
-    //                     // COMPILE ERROR: cannot move out of dereference of raw pointer:
-    //                     prev = Some(Box::new(*raw_curr));
-    //                     // prev = curr;
+    //                 // create a raw pointer for our "next" node:
+    //                 let next: *mut _ = &mut (*(raw_curr)).next;
+    //                 if (*next).is_some() {
+    //                     // ERROR: cannot move out of dereference of
+    //                     // raw pointer (cannot move out of dereference
+    //                     // of raw pointer) [E0507]
+    //                     (*raw_prev).next = *next;
+    //                     // (*raw_prev).next = (*raw_curr).next;  // same error
+
+    //                     // ERROR: cannot move out of dereference of
+    //                     // raw pointer (cannot move out of dereference
+    //                     // of raw pointer) [E0507]
+    //                     curr = *next;
+
+    //                     // ERROR: cannot move out of dereference of
+    //                     // raw pointer (cannot move out of dereference
+    //                     // of raw pointer) [E0507]
+    //                     prev = Some(Box::new(*raw_prev));
     //                 } else {
     //                     // If the tail is being removed, then set tail
     //                     // pointer to be prev:
     //                     self.tail = raw_prev;
     //                     (*raw_prev).next = None;
-    //                     // COMPILE ERROR: cannot move out of dereference of raw pointer:
+    //                     // ERROR: cannot move out of dereference of
+    //                     // raw pointer (cannot move out of dereference
+    //                     // of raw pointer) [E0507]
     //                     prev = Some(Box::new(*raw_curr));
     //                     curr = None;
     //                 }
