@@ -38,15 +38,6 @@ struct Iter<T> {
     next: Option<NodeRef<T>>,
 }
 
-impl<T> Node<T> {
-    fn tail(node: &NodeRef<T>) -> Option<NodeRef<T>> {
-        if let Some(cur) = node.borrow().next.as_ref().cloned() {
-            return Node::tail(&cur.clone());
-        }
-        Some(node.clone())
-    }
-}
-
 impl<T> LinkedList<T>
 where
     T: std::cmp::Eq,
@@ -75,11 +66,9 @@ where
     }
 
     fn tail(&self) -> Option<NodeRef<T>> {
-        if let Some(cur) = self.head.as_ref().cloned() {
-            if cur.borrow().next.is_none() {
-                return Some(cur.clone());
-            } else {
-                return Node::tail(&cur.clone());
+        for node in self.iter() {
+            if let None = node.borrow().next {
+                return Some(node.clone());
             }
         }
         None
