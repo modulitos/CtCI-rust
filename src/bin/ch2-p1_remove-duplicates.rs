@@ -99,21 +99,6 @@ where
         }
     }
 
-    fn list_has_duplicates(&self) -> bool {
-        let mut set: HashSet<u64> = HashSet::new();
-        for node in self.iter() {
-            let data = &node.borrow().data;
-            let mut s = DefaultHasher::new();
-            data.hash(&mut s);
-            let hash = s.finish();
-            if set.contains(&hash) {
-                return true;
-            }
-            set.insert(hash);
-        }
-        false
-    }
-
     fn remove_duplicates(&mut self) {
         let mut set: HashSet<u64> = HashSet::new();
         for node in self.iter() {
@@ -229,6 +214,5 @@ fn main() {
     let mut list = LinkedList::<String>::new();
     list.append(String::from("item1"));
     list.append(String::from("item2"));
-    list.list_has_duplicates();
     list.remove_duplicates();
 }

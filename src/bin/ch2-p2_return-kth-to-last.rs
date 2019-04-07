@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::fmt;
 use std::fmt::Display;
-use std::hash::Hasher;
 use std::rc::Rc;
 
 type NodeRef<T> = Rc<RefCell<Node<T>>>;

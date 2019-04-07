@@ -161,12 +161,10 @@ impl<T: Display> Display for LinkedList<T> {
 impl<T: PartialEq + fmt::Debug> PartialEq for Node<T> {
     fn eq(&self, other: &Self) -> bool {
         println!("comparing two nodes: self.head: {:?}, other.head: {:?}", self, other);
-        // self.data == other.data
         self.data == other.data && self.next == other.next
     }
 
     fn ne(&self, other: &Self) -> bool {
-        // self.data != other.data
         println!("comparing two nodes: self.head: {:?}, other.head: {:?}", self, other);
         self.data != other.data && self.next == other.next
     }
