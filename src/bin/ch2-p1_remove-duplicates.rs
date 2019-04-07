@@ -11,6 +11,9 @@ use std::fmt;
 
 //  * implements Eq and PartialEq traits, instead of a
 //  "has_duplicates" function.
+//  * uses an _unlink_node method on LinkedList, instead of on the
+//  Node struct, which is more consistent with the official library
+
 
 type NodeRef<T> = Rc<RefCell<Node<T>>>;
 
@@ -41,17 +44,6 @@ impl<T> Node<T> {
             return Node::tail(&cur.clone());
         }
         Some(node.clone())
-    }
-
-    fn remove(&mut self) {
-        if let Some(ref prev) = self.prev {
-            if let Some(ref next) = self.next {
-                next.borrow_mut().prev = Some(prev.clone());
-                prev.borrow_mut().next = Some(next.clone());
-            } else {
-                prev.borrow_mut().next = None;
-            }
-        }
     }
 }
 
@@ -99,6 +91,21 @@ where
         }
     }
 
+    /// Warning: this will not check that the provided node belongs to the current list.
+    fn _unlink_node(&mut self, node_to_remove: Option<NodeRef<T>>) {
+        let node_to_remove = node_to_remove.unwrap();
+
+        match node_to_remove.borrow().prev.clone() {
+            Some(prev) => prev.borrow_mut().next = node_to_remove.borrow().next.clone(),
+            None => self.head = node_to_remove.borrow().next.clone(),
+        };
+
+        match node_to_remove.borrow().next.clone() {
+            Some(next) => next.borrow_mut().prev = node_to_remove.borrow().prev.clone(),
+            _ => (),
+        };
+    }
+
     fn remove_duplicates(&mut self) {
         let mut set: HashSet<u64> = HashSet::new();
         for node in self.iter() {
@@ -109,7 +116,7 @@ where
             }
             let hash = s.finish();
             if set.contains(&hash) {
-                node.borrow_mut().remove();
+                self._unlink_node(Some(node));
             }
             set.insert(hash);
         }
