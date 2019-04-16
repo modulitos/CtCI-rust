@@ -1,7 +1,7 @@
-use std::cell::RefCell;
 use std::fmt;
 use std::fmt::Display;
 use std::rc::Rc;
+use std::cell::RefCell;
 
 type NodeRef<T> = Rc<RefCell<Node<T>>>;
 
@@ -10,9 +10,9 @@ pub struct LinkedList<T> {
     head: Option<NodeRef<T>>,
 }
 
-struct Node<T> {
-    data: T,
-    next: Option<NodeRef<T>>,
+pub struct Node<T> {
+    pub data: T,
+    pub next: Option<NodeRef<T>>,
 }
 
 impl<T: fmt::Debug> fmt::Debug for Node<T> {
@@ -32,6 +32,13 @@ where
 {
     pub fn new() -> Self {
         Self { head: None }
+    }
+
+    pub fn prepend(&mut self, new_value: T) {
+        self.head = Some(Rc::new(RefCell::new(Node {
+                data: new_value,
+                next: self.head.take()
+            })));
     }
 
     pub fn append(&mut self, new_value: T) {
@@ -76,19 +83,14 @@ where
         }
     }
 
-    fn iter(&self) -> Iter<T> {
+    pub fn iter(&self) -> Iter<T> {
         Iter {
             next: self.head.as_ref().cloned(),
         }
     }
-
-    fn add_lists(&self, other: LinkedList<T>) -> LinkedList<T> {
-        other
-    }
-
 }
 
-struct Iter<T> {
+pub struct Iter<T> {
     next: Option<NodeRef<T>>,
 }
 
@@ -102,6 +104,10 @@ impl<'a, T> Iterator for Iter<T> {
         }
         None
     }
+    // TODO: consider this for reverse iteration - maybe using doubly LL?
+    // fn next_back(&mut self) -> Option<Self::Item> {
+    //     // TODO
+    // }
 }
 
 impl<T: Display> Display for LinkedList<T> {
@@ -178,5 +184,24 @@ mod tests {
         list = LinkedList { head: list.tail() };
         assert_eq!(list, list2);
     }
+
+    #[test]
+    fn prepend_and_append() {
+        let mut list = LinkedList::new();
+        list.prepend(2);
+        list.prepend(1);
+        list.append(3);
+        let mut list2 = LinkedList::new();
+        list2.append(1);
+        list2.append(2);
+        list2.append(3);
+
+        assert_eq!(list, list2);
+        list2.prepend(1);
+        assert_ne!(list, list2);
+        list.prepend(1);
+        assert_eq!(list, list2);
+    }
+
 
 }
