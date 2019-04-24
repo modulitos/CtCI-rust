@@ -111,7 +111,7 @@ impl<'a, T> Iterator for Iter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(next) = self.next.clone() {
-            if Rc::ptr_eq(&self.next.clone().unwrap(), &self.last.clone().unwrap()) {
+            if Rc::ptr_eq(self.next.as_ref().unwrap(), self.last.as_ref().unwrap()) {
                 self.last = None;
                 self.next = None;
             } else {
@@ -133,7 +133,7 @@ impl<'a, T> DoubleEndedIterator for Iter<T> {
 
             // Check if self.next and self.last are the same node. If
             // so, return that node and set them both to None
-            if Rc::ptr_eq(&self.next.clone().unwrap(), &self.last.clone().unwrap()) {
+            if Rc::ptr_eq(self.next.as_ref().unwrap(), self.last.as_ref().unwrap()) {
                 self.last = None;
                 self.next = None;
             } else {
