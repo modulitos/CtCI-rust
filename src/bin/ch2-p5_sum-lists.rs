@@ -16,9 +16,11 @@
 // That is, 912.
 
 // Q: can we assume both numbers have the same number of digits?
+// EXAMPLE:
+// Input: (9-) 9 -) 9) + (1 -) 0 -) 0).That is, 999 + 001
+// Output: (0 -) 0 -) 0 -) 1). That is, 1000.
 
 extern crate cracking;
-
 use cracking::LinkedList;
 
 pub trait SumLists<T> {

@@ -1,7 +1,7 @@
+use std::cell::RefCell;
 use std::fmt;
 use std::fmt::Display;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 type NodeRef<T> = Rc<RefCell<Node<T>>>;
 
@@ -13,6 +13,7 @@ pub struct LinkedList<T> {
 pub struct Node<T> {
     pub data: T,
     pub next: Option<NodeRef<T>>,
+    pub prev: Option<NodeRef<T>>,
 }
 
 impl<T: fmt::Debug> fmt::Debug for Node<T> {
@@ -36,22 +37,28 @@ where
 
     pub fn prepend(&mut self, new_value: T) {
         self.head = Some(Rc::new(RefCell::new(Node {
-                data: new_value,
-                next: self.head.take()
-            })));
+            data: new_value,
+            next: self.head.take(),
+            prev: None,
+        })));
     }
 
     pub fn append(&mut self, new_value: T) {
         if let Some(tail) = self.tail() {
-            tail.borrow_mut().next = Some(Rc::new(RefCell::new(Node {
+            let prev = Some(tail.clone());
+            let new_tail = Some(Rc::new(RefCell::new(Node {
                 data: new_value,
                 next: None,
+                prev,
             })));
+            tail.borrow_mut().next = new_tail;
         } else {
-            self.head = Some(Rc::new(RefCell::new(Node {
+            let new_node = Some(Rc::new(RefCell::new(Node {
                 data: new_value,
                 next: None,
+                prev: None,
             })));
+            self.head = new_node;
         }
     }
 
@@ -65,22 +72,18 @@ where
     }
 
     /// Warning: this will not check that the provided node belongs to the current list.
-    fn _unlink_node(&mut self, node_to_remove: Option<NodeRef<T>>) {
+    pub fn unlink_node(&mut self, node_to_remove: Option<NodeRef<T>>) {
         let node_to_remove = node_to_remove.unwrap();
 
-        for n in self.iter() {
-            let mut borrowed_node = n.borrow_mut();
-            if let Some(next) = borrowed_node.next.clone() {
-                if Rc::ptr_eq(&next, &node_to_remove) {
-                    borrowed_node.next = node_to_remove.borrow_mut().next.take();
-                    break;
-                }
-            } else if Rc::ptr_eq(&n, &node_to_remove) {
-                // handle case when node_to_remove is the only element
-                // in the list
-                self.head = None;
-            }
-        }
+        match node_to_remove.borrow().prev.clone() {
+            Some(prev) => prev.borrow_mut().next = node_to_remove.borrow().next.clone(),
+            None => self.head = node_to_remove.borrow().next.clone(),
+        };
+
+        match node_to_remove.borrow().next.clone() {
+            Some(next) => next.borrow_mut().prev = node_to_remove.borrow().prev.clone(),
+            _ => (),
+        };
     }
 
     pub fn iter(&self) -> Iter<T> {
