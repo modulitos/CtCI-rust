@@ -7,7 +7,7 @@ type NodeRef<T> = Rc<RefCell<Node<T>>>;
 
 #[derive(Debug)]
 pub struct LinkedList<T> {
-    head: Option<NodeRef<T>>,
+    pub head: Option<NodeRef<T>>,
 }
 
 pub struct Node<T> {
