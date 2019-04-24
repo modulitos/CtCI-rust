@@ -8,6 +8,7 @@ type NodeRef<T> = Rc<RefCell<Node<T>>>;
 #[derive(Debug)]
 pub struct LinkedList<T> {
     pub head: Option<NodeRef<T>>,
+    pub tail: Option<NodeRef<T>>,
 }
 
 pub struct Node<T> {
@@ -32,15 +33,22 @@ where
         + std::fmt::Debug,
 {
     pub fn new() -> Self {
-        Self { head: None }
+        Self {
+            head: None,
+            tail: None,
+        }
     }
 
     pub fn prepend(&mut self, new_value: T) {
-        self.head = Some(Rc::new(RefCell::new(Node {
+        let new_node = Some(Rc::new(RefCell::new(Node {
             data: new_value,
             next: self.head.take(),
             prev: None,
         })));
+        self.head = new_node.clone();
+        if let None = self.tail {
+            self.tail = new_node;
+        }
     }
 
     pub fn append(&mut self, new_value: T) {
@@ -51,24 +59,21 @@ where
                 next: None,
                 prev,
             })));
-            tail.borrow_mut().next = new_tail;
+            tail.borrow_mut().next = new_tail.clone();
+            self.tail = new_tail;
         } else {
             let new_node = Some(Rc::new(RefCell::new(Node {
                 data: new_value,
                 next: None,
                 prev: None,
             })));
-            self.head = new_node;
+            self.head = new_node.clone();
+            self.tail = new_node;
         }
     }
 
     fn tail(&self) -> Option<NodeRef<T>> {
-        for node in self.iter() {
-            if let None = node.borrow().next {
-                return Some(node.clone());
-            }
-        }
-        None
+        self.tail.clone()
     }
 
     /// Warning: this will not check that the provided node belongs to the current list.
@@ -82,35 +87,64 @@ where
 
         match node_to_remove.borrow().next.clone() {
             Some(next) => next.borrow_mut().prev = node_to_remove.borrow().prev.clone(),
-            _ => (),
+            // if we remove the tail, assign new tail:
+            None => self.tail = node_to_remove.borrow().prev.clone(),
         };
     }
 
     pub fn iter(&self) -> Iter<T> {
         Iter {
-            next: self.head.as_ref().cloned(),
+            next: self.head.clone(),
+            last: self.tail.clone(),
         }
     }
 }
 
+#[derive(Debug)]
 pub struct Iter<T> {
     next: Option<NodeRef<T>>,
+    last: Option<NodeRef<T>>,
 }
 
 impl<'a, T> Iterator for Iter<T> {
     type Item = NodeRef<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(cur) = self.next.as_ref().cloned() {
-            self.next = cur.borrow().next.clone();
-            return Some(cur.clone());
+        if let Some(next) = self.next.clone() {
+            if Rc::ptr_eq(&self.next.clone().unwrap(), &self.last.clone().unwrap()) {
+                self.last = None;
+                self.next = None;
+            } else {
+                self.next = next.borrow().next.clone();
+            }
+
+            return Some(next);
+        } else {
+            None
         }
-        None
     }
-    // TODO: consider this for reverse iteration - maybe using doubly LL?
-    // fn next_back(&mut self) -> Option<Self::Item> {
-    //     // TODO
-    // }
+}
+
+impl<'a, T> DoubleEndedIterator for Iter<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if let Some(last) = self.last.clone() {
+            // Return the tail, and set the second to last element
+            // (new tail) as the tail
+
+            // Check if self.next and self.last are the same node. If
+            // so, return that node and set them both to None
+            if Rc::ptr_eq(&self.next.clone().unwrap(), &self.last.clone().unwrap()) {
+                self.last = None;
+                self.next = None;
+            } else {
+                self.last = last.borrow().prev.clone();
+            }
+            return Some(last);
+        } else {
+            // iterator is empty:
+            None
+        }
+    }
 }
 
 impl<T: Display> Display for LinkedList<T> {
@@ -182,9 +216,11 @@ mod tests {
         list2.append(3);
 
         assert_eq!(list, list2);
-        list2 = LinkedList { head: list2.tail() };
+        list2 = LinkedList::new();
+        list2.append(3);
         assert_ne!(list, list2);
-        list = LinkedList { head: list.tail() };
+        list = LinkedList::new();
+        list.append(3);
         assert_eq!(list, list2);
     }
 
@@ -206,5 +242,35 @@ mod tests {
         assert_eq!(list, list2);
     }
 
+    #[test]
+    fn iter_next_back() {
+        let mut list = LinkedList::new();
+        list.append(1);
+        list.append(2);
+        list.append(3);
 
+        let mut iter = list.iter();
+        assert_eq!(3, iter.next_back().unwrap().borrow().data);
+        assert_eq!(2, iter.next_back().unwrap().borrow().data);
+        assert_eq!(1, iter.next_back().unwrap().borrow().data);
+        assert_eq!(None, iter.next_back());
+    }
+
+    #[test]
+    fn iter_double_ended() {
+        let mut list = LinkedList::new();
+        list.append(1);
+        list.append(2);
+        list.append(3);
+        list.append(4);
+
+        let mut iter = list.iter();
+        assert_eq!(1, iter.next().unwrap().borrow().data);
+        assert_eq!(4, iter.next_back().unwrap().borrow().data);
+        assert_eq!(2, iter.next().unwrap().borrow().data);
+        assert_eq!(3, iter.next_back().unwrap().borrow().data);
+        assert_eq!(None, iter.next());
+        assert_eq!(None, iter.next_back());
+        assert_eq!(None, iter.next());
+    }
 }
