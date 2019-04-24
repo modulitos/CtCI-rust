@@ -1,11 +1,11 @@
 extern crate cracking;
 use cracking::LinkedList;
 
-pub trait RemoveKToLast<T> {
+pub trait KthToLast<T> {
     fn kth_to_last(&self, k: usize) -> T;
 }
 
-impl<T> RemoveKToLast<T> for LinkedList<T>
+impl<T> KthToLast<T> for LinkedList<T>
 where
     T: std::cmp::Eq
         + std::hash::Hash
