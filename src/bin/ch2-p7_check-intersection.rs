@@ -8,7 +8,7 @@
 
 
 extern crate cracking;
-use cracking::{LinkedList, Node};
+use cracking::{SinglyLinkedList as LinkedList, Node};
 
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -66,7 +66,7 @@ mod test {
 
     #[test]
     fn check_single_intersection() {
-        let common_node = Rc::new(RefCell::new(Node{ data: 9, next: None, prev: None}));
+        let common_node = Rc::new(RefCell::new(Node{ data: 9, next: None}));
         let mut list1 = LinkedList::new();
         list1.append_node(common_node.clone());
         let mut list2 = LinkedList::new();
@@ -76,7 +76,7 @@ mod test {
 
     #[test]
     fn check_intersection() {
-        let common_node = Rc::new(RefCell::new(Node{ data: 9, next: None, prev: None}));
+        let common_node = Rc::new(RefCell::new(Node{ data: 9, next: None}));
         let mut list1 = LinkedList::new();
         list1.append(3);
         list1.append(2);

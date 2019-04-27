@@ -240,12 +240,12 @@ mod tests {
 
     #[test]
     fn eq_append_node() {
-        let node = Rc::new(RefCell::new(Node {
+        let shared_node = Rc::new(RefCell::new(Node {
             data: 1,
             next: None,
         }));
         let mut list1 = LinkedList::new();
-        list1.append_node(node.clone());
+        list1.append_node(shared_node.clone());
 
         let mut list2 = LinkedList::new();
         list2.append(1);
@@ -253,7 +253,7 @@ mod tests {
         assert_eq!(list1, list2);
 
         let mut list3 = LinkedList::new();
-        list3.append_node(node);
+        list3.append_node(shared_node);
         list3.append(2);
 
         let mut list4 = LinkedList::new();
@@ -261,10 +261,14 @@ mod tests {
         list4.append(2);
 
         assert_eq!(list3, list4);
-        // These are no longer equal!
-        // TODO: tail of list1 should be updated...
-        // TODO: consider providing append_node only on a singly linked implementation...
+
+        // These are no longer equal! Because a new node has been added to the shared_node:
         assert_ne!(list1, list2);
+        let mut list2 = LinkedList::new();
+        list2.append(1);
+        list2.append(2);
+
+        assert_eq!(list1, list2);
     }
 
     #[test]
@@ -295,8 +299,6 @@ mod tests {
         list1.append_node(node.clone());
         list2.append_node(node);
         list2.append(3);
-        // println!("list1: {:?}", list1);
-        // println!("list2: {:?}", list2);
         assert_eq!(list1, list2);
     }
 }
