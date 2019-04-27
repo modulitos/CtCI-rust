@@ -64,7 +64,7 @@ where
         }
     }
 
-    fn tail(&self) -> Option<NodeRef<T>> {
+    pub fn tail(&self) -> Option<NodeRef<T>> {
         for node in self.iter() {
             if let None = node.clone().borrow().next {
                 return Some(node);

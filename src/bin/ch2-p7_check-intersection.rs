@@ -15,6 +15,7 @@ use std::cell::RefCell;
 
 pub trait CheckIntersection<T> {
     fn is_intersection(&self, other: &LinkedList<T>) -> bool;
+    fn is_intersection_iterative(&self, other: &LinkedList<T>) -> bool;
 }
 
 impl<T> CheckIntersection<T> for LinkedList<T>
@@ -26,7 +27,16 @@ where
         + std::cmp::PartialOrd
         + std::fmt::Debug,
 {
+    // uses the assumption that if there is an intersection in a LL,
+    // then the tails will be the same node.
     fn is_intersection(&self, other: &LinkedList<T>) -> bool {
+        if let (Some(self_tail), Some(other_tail)) = (self.tail(), other.tail()) {
+            Rc::ptr_eq(&self_tail, &other_tail)
+        } else {
+            false
+        }
+    }
+    fn is_intersection_iterative(&self, other: &LinkedList<T>) -> bool {
         for node in self.iter() {
             for node2 in other.iter() {
                 if Rc::ptr_eq(&node, &node2) {
@@ -91,5 +101,43 @@ mod test {
         list1.append(2);
         list2.append(2);
         assert_eq!(list1.is_intersection(&list2), true);
+    }
+
+    #[test]
+    fn check_no_intersection_iterative() {
+        let mut list1 = LinkedList::new();
+        list1.append(3);
+        let mut list2 = LinkedList::new();
+        list2.append(3);
+        assert_eq!(list1.is_intersection_iterative(&list2), false);
+    }
+
+    #[test]
+    fn check_single_intersection_iterative() {
+        let common_node = Rc::new(RefCell::new(Node{ data: 9, next: None}));
+        let mut list1 = LinkedList::new();
+        list1.append_node(common_node.clone());
+        let mut list2 = LinkedList::new();
+        list2.append_node(common_node);
+        assert_eq!(list1.is_intersection_iterative(&list2), true);
+    }
+
+    #[test]
+    fn check_intersection_iterative() {
+        let common_node = Rc::new(RefCell::new(Node{ data: 9, next: None}));
+        let mut list1 = LinkedList::new();
+        list1.append(3);
+        list1.append(2);
+        list1.append_node(common_node.clone());
+        list1.append(1);
+        let mut list2 = LinkedList::new();
+        list1.append(3);
+        list1.append(2);
+        assert_eq!(list1.is_intersection_iterative(&list2), false);
+        list2.append_node(common_node);
+        assert_eq!(list1.is_intersection_iterative(&list2), true);
+        list1.append(2);
+        list2.append(2);
+        assert_eq!(list1.is_intersection_iterative(&list2), true);
     }
 }
