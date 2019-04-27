@@ -72,6 +72,19 @@ where
         }
     }
 
+    pub fn append_node(&mut self, node: NodeRef<T>) {
+        if let Some(tail) = self.tail() {
+            let prev = Some(tail.clone());
+            node.borrow_mut().prev = prev;
+            tail.borrow_mut().next = Some(node.clone());
+            self.tail = Some(node);
+        } else {
+            node.borrow_mut().prev = None;
+            self.head = Some(node.clone());
+            self.tail = Some(node);
+        }
+    }
+
     fn tail(&self) -> Option<NodeRef<T>> {
         self.tail.clone()
     }
@@ -272,5 +285,29 @@ mod tests {
         assert_eq!(None, iter.next());
         assert_eq!(None, iter.next_back());
         assert_eq!(None, iter.next());
+    }
+
+    #[test]
+    fn eq_append_node() {
+        let node = Rc::new(RefCell::new(Node{ data: 3, next: None, prev: None}));
+        let mut list1 = LinkedList::new();
+        list1.append(1);
+        list1.append(2);
+        list1.append(3);
+
+        let mut list2 = LinkedList::new();
+        list2.append(1);
+        list2.append(2);
+        list2.append_node(node);
+
+        assert_eq!(list1, list2);
+        list1.append(4);
+        assert_ne!(list1, list2);
+        list2.append(4);
+        assert_eq!(list1, list2);
+        let node = Rc::new(RefCell::new(Node{ data: 9, next: None, prev: None}));
+        list1.append_node(node.clone());
+        list2.append_node(node);
+        assert_eq!(list1, list2);
     }
 }

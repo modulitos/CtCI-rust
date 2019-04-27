@@ -9,8 +9,6 @@ pub trait CheckPalindrome<T> {
     fn is_palindrome_iterative(&self) -> bool;
 }
 
-// Assumes that LinkedList has implemented a doubleendediterator
-// (next_back method)
 impl<T> CheckPalindrome<T> for LinkedList<T>
 where
     T: std::cmp::Eq
@@ -20,6 +18,8 @@ where
         + std::cmp::PartialOrd
         + std::fmt::Debug,
 {
+    // Assumes that LinkedList has implemented a doubleendediterator
+    // (next_back method)
     fn is_palindrome(&self) -> bool {
         let mut iter = self.iter();
         while let Some(next) = iter.next() {
