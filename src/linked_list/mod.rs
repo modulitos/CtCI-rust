@@ -17,3 +17,5 @@ pub mod fifth;
 
 // custom refcell implementation:
 pub mod refcell;
+// custom refcell implementation, as a single linked list:
+pub mod refcell_singly;
