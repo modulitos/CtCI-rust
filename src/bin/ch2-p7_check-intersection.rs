@@ -29,6 +29,7 @@ where
 {
     // uses the assumption that if there is an intersection in a LL,
     // then the tails will be the same node.
+    // Takes O(A+B) time, where A and B are lengths of the lists.
     fn is_intersection(&self, other: &LinkedList<T>) -> bool {
         if let (Some(self_tail), Some(other_tail)) = (self.tail(), other.tail()) {
             Rc::ptr_eq(&self_tail, &other_tail)
@@ -36,6 +37,8 @@ where
             false
         }
     }
+    // O(N^2) solution, iteratively comparing all nodes in one list to
+    // all nodes in the other list
     fn is_intersection_iterative(&self, other: &LinkedList<T>) -> bool {
         for node in self.iter() {
             for node2 in other.iter() {

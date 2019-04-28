@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::fmt;
 use std::fmt::Display;
+use std::ptr;
 use std::rc::Rc;
 
 type NodeRef<T> = Rc<RefCell<Node<T>>>;
@@ -160,28 +161,24 @@ impl<T: Display> Display for LinkedList<T> {
 
 impl<T: PartialEq + fmt::Debug> PartialEq for Node<T> {
     fn eq(&self, other: &Self) -> bool {
-        // println!(
-        //     "comparing two nodes: self.head: {:?}, other.head: {:?}",
-        //     self, other
-        // );
+        if ptr::eq(self, other) {
+            // For loop detection - if the nodes share the same
+            // reference, they are equal.
+            return true;
+        }
         self.data == other.data && self.next == other.next
     }
 
     fn ne(&self, other: &Self) -> bool {
-        // println!(
-        //     "comparing two nodes: self.head: {:?}, other.head: {:?}",
-        //     self, other
-        // );
+        if !ptr::eq(self, other) {
+            return true;
+        }
         self.data != other.data && self.next == other.next
     }
 }
 
 impl<T: PartialEq + std::fmt::Debug> PartialEq for LinkedList<T> {
     fn eq(&self, other: &Self) -> bool {
-        // println!(
-        //     "comparing two lists: self.head: {:?}, other.head: {:?}",
-        //     self.head, other.head
-        // );
         self.head == other.head
     }
 
@@ -300,5 +297,28 @@ mod tests {
         list2.append_node(node);
         list2.append(3);
         assert_eq!(list1, list2);
+    }
+
+    #[test]
+    fn eq_with_cycle() {
+        let first_node = Rc::new(RefCell::new(Node {
+            data: 1,
+            next: None,
+        }));
+        let mut list = LinkedList::new();
+        list.append_node(first_node.clone());
+        list.append(2);
+        list.append(3);
+        list.append_node(first_node.clone());
+
+        let mut list2 = LinkedList::new();
+        list2.append(1);
+
+        assert_ne!(list, list2);
+
+        let mut list2 = LinkedList::new();
+        list2.append_node(first_node);
+
+        assert_eq!(list, list2);
     }
 }
