@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefCell};
+use std::cell::RefCell;
 use std::collections::HashSet;
 use std::convert::From;
 use std::fmt;
@@ -155,13 +155,6 @@ impl<T: PartialEq> PartialEq for Node<T> {
         }
         self.data == other.data && self.next == other.next
     }
-
-    fn ne(&self, other: &Self) -> bool {
-        if !ptr::eq(self, other) {
-            return true;
-        }
-        self.data != other.data && self.next == other.next
-    }
 }
 
 // By implementing Eq, we are making the promise that our
@@ -201,16 +194,6 @@ impl<T: PartialEq> PartialEq for HashedNode<T> {
         let other_node = other.0.borrow();
         let self_node = self.0.borrow();
         self_node.data == other_node.data && self_node.next == other_node.next
-    }
-
-    // // not needed? It's auto inversed...
-    fn ne(&self, other: &Self) -> bool {
-        if !ptr::eq(self, other) {
-            return true;
-        }
-        let other_node = other.0.borrow();
-        let self_node = self.0.borrow();
-        self_node.data != other_node.data && self_node.next == other_node.next
     }
 }
 
