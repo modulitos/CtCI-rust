@@ -1,10 +1,16 @@
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell};
+use std::collections::HashSet;
+use std::convert::From;
 use std::fmt;
 use std::fmt::Display;
+use std::hash::{Hash, Hasher};
 use std::ptr;
 use std::rc::Rc;
 
-type NodeRef<T> = Rc<RefCell<Node<T>>>;
+pub type NodeRef<T> = Rc<RefCell<Node<T>>>;
+
+// Used specifically for hashing needs, like HashSet:
+pub struct HashedNode<T>(NodeRef<T>);
 
 #[derive(Debug)]
 pub struct LinkedList<T> {
@@ -65,6 +71,8 @@ where
         }
     }
 
+    // TODO: this isn't loop safe!
+    // If we try and append to a LL that has a cycle, we'll be in an infinite loop.
     pub fn tail(&self) -> Option<NodeRef<T>> {
         for node in self.iter() {
             if let None = node.clone().borrow().next {
@@ -93,23 +101,6 @@ where
         }
     }
 
-    // /// Warning: this will not check that the provided node belongs to the current list.
-    // pub fn unlink_node(&mut self, node_to_remove: Option<NodeRef<T>>) {
-    //     let node_to_remove = node_to_remove.unwrap();
-
-    //     match node_to_remove.borrow().prev.clone() {
-    //         Some(prev) => prev.borrow_mut().next = node_to_remove.borrow().next.clone(),
-    //         // if we removed the head, assign new head:
-    //         None => self.head = node_to_remove.borrow().next.clone(),
-    //     };
-
-    //     match node_to_remove.borrow().next.clone() {
-    //         Some(next) => (),
-    //         // if we remove the tail, assign new tail:
-    //         None => ()
-    //     };
-    // }
-
     pub fn iter(&self) -> Iter<T> {
         Iter {
             next: self.head.clone(),
@@ -128,15 +119,11 @@ impl<'a, T> Iterator for Iter<T> {
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(next) = self.next.clone() {
             // Set the new self.next:
-            // if Rc::ptr_eq(self.next.as_ref().unwrap(), self.last.as_ref().unwrap()) {
-
             if let Some(new_next) = next.borrow().next.clone() {
                 self.next = Some(new_next);
             } else {
                 self.next = None;
             }
-
-            // self.next = next.borrow().next.clone();
             return Some(next);
         } else {
             None
@@ -159,7 +146,7 @@ impl<T: Display> Display for LinkedList<T> {
     }
 }
 
-impl<T: PartialEq + fmt::Debug> PartialEq for Node<T> {
+impl<T: PartialEq> PartialEq for Node<T> {
     fn eq(&self, other: &Self) -> bool {
         if ptr::eq(self, other) {
             // For loop detection - if the nodes share the same
@@ -177,7 +164,59 @@ impl<T: PartialEq + fmt::Debug> PartialEq for Node<T> {
     }
 }
 
-impl<T: PartialEq + std::fmt::Debug> PartialEq for LinkedList<T> {
+// By implementing Eq, we are making the promise that our
+// implementation of PartialEq is reflexive.
+impl<T: Eq> Eq for Node<T> {}
+
+impl<T: Hash> std::hash::Hash for HashedNode<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // TODO: make hash work for nodes that have the same data
+        self.0.borrow().data.hash(state);
+    }
+}
+
+impl<T> From<T> for HashedNode<T> {
+    fn from(item: T) -> Self {
+        HashedNode(Rc::new(RefCell::new(Node {
+            data: item,
+            next: None,
+        })))
+    }
+}
+
+impl<T> HashedNode<T> {
+    pub fn from_node(node: NodeRef<T>) -> Self {
+        HashedNode(node)
+    }
+}
+
+
+impl<T: PartialEq> PartialEq for HashedNode<T> {
+    fn eq(&self, other: &Self) -> bool {
+        if ptr::eq(self, other) {
+            // For loop detection - if the nodes share the same
+            // reference, they are equal.
+            return true;
+        }
+        let other_node = other.0.borrow();
+        let self_node = self.0.borrow();
+        self_node.data == other_node.data && self_node.next == other_node.next
+    }
+
+    // // not needed? It's auto inversed...
+    fn ne(&self, other: &Self) -> bool {
+        if !ptr::eq(self, other) {
+            return true;
+        }
+        let other_node = other.0.borrow();
+        let self_node = self.0.borrow();
+        self_node.data != other_node.data && self_node.next == other_node.next
+    }
+}
+
+impl<T: Eq> Eq for HashedNode<T> {}
+
+impl<T: PartialEq> PartialEq for LinkedList<T> {
     fn eq(&self, other: &Self) -> bool {
         self.head == other.head
     }
@@ -320,5 +359,25 @@ mod tests {
         list2.append_node(first_node);
 
         assert_eq!(list, list2);
+    }
+
+    #[test]
+    // Tests that our nodes can be hashed and saved into a set.
+    fn hashset_iter_nodes() {
+        let node = Rc::new(RefCell::new(Node{ data: 9, next: None}));
+        let mut list = LinkedList::new();
+        list.append(1);
+        list.append(2);
+        list.append(3);
+        list.append_node(node.clone());
+
+        let mut set: HashSet<HashedNode<i32>> = HashSet::new();
+        // iterate over nodes, adding each node to our hashset:
+        for node in list.iter() {
+            set.insert(HashedNode::from_node(node));
+        }
+        assert_eq!(set.contains(&HashedNode::from_node(node)), true);
+        assert_eq!(set.contains(&HashedNode::from(4)), false);
+        assert_eq!(set.len(), 4);
     }
 }
