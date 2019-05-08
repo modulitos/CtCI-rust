@@ -140,6 +140,7 @@ mod test {
         list.append(4);
         list.append_node(node.clone());
         assert!(Rc::ptr_eq(&list.detect_loop().unwrap(), &node));
+        assert!(Rc::ptr_eq(&list.detect_loop_with_set().unwrap(), &node));
     }
 
     #[test]
@@ -160,5 +161,6 @@ mod test {
         list.append(8);
         list.append_node(node.clone());
         assert!(Rc::ptr_eq(&list.detect_loop().unwrap(), &node));
+        assert!(Rc::ptr_eq(&list.detect_loop_with_set().unwrap(), &node));
     }
 }
