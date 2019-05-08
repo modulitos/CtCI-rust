@@ -32,41 +32,38 @@ where
         let mut slow_iter = self.iter();
         let mut fast_iter = self.iter();
         while let (Some(slow), Some(_)) = (slow_iter.next(), fast_iter.next()) {
+            // fast_iter moves 2 steps per iteration:
             match fast_iter.next() {
-                // fast_iter moves 2 steps per iteration.
-                None => return None,
+                None => return None, // no loop!
                 Some(fast) => {
                     if Rc::ptr_eq(&slow, &fast) {
-                        // loop is detected here - this is our collision point.
-
-                        // If the head is k steps from the start of
-                        // the loop, then when slow_iter reaches the
-                        // start of the loop, fast_iter is k steps
-                        // ahead of slow_iter.
-
-                        // If `K = k % loop_size`, then fast_iter is K
-                        // steps ahead of slow iter, and loop_size - K
-                        // steps behind slow iter. So slow_iter will
-                        // move loop_size - K steps once they collide,
-                        // making the collision point K steps behind
-                        // the start of he loop. This is the same as
-                        // being k steps behind the start of the loop!
-
-                        // Thus, we know that the collision point is
-                        // the same number of nodes away from the loop
-                        // start as the head, so let's set a new
-                        // pointer to the head, and move along both
-                        // iterators until they collide again at the
-                        // start of the loop.
-                        slow_iter = self.iter();
-                        while let (Some(slow), Some(fast)) = (slow_iter.next(), fast_iter.next()) {
-                            if Rc::ptr_eq(&slow, &fast) {
-                                // This is the start of our loop.
-                                return Some(fast);
-                            }
-                        }
+                        // loop is detected here - this is our
+                        // collision point.
+                        break;
                     }
                 }
+            }
+        }
+        // If the head is k steps from the start of the loop, then
+        // when slow_iter reaches the start of the loop, fast_iter is
+        // k steps ahead of slow_iter.
+
+        // If `K = k % loop_size`, then fast_iter is K steps ahead of
+        // slow iter, and loop_size - K steps behind slow iter. So
+        // slow_iter will move loop_size - K steps once they collide,
+        // making the collision point K steps behind the start of he
+        // loop. This is the same as being k steps behind the start of
+        // the loop!
+
+        // Thus, we know that the collision point is the same number
+        // of nodes away from the loop start as the head, so let's set
+        // a new pointer to the head, and move along both iterators
+        // until they collide again at the start of the loop.
+        slow_iter = self.iter();
+        while let (Some(slow), Some(fast)) = (slow_iter.next(), fast_iter.next()) {
+            if Rc::ptr_eq(&slow, &fast) {
+                // This is the starting node of our loop.
+                return Some(fast);
             }
         }
         None
