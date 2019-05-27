@@ -25,3 +25,11 @@ You can run the tests for a specific library like so:
 ```ShellSession
 $ cargo test --lib fifth
 ```
+
+## Credits:
+
+The data structure implementations are largely influenced by the data structures in this book: [Hands on Data Structures and Algorithms with Rust book](https://github.com/PacktPublishing/Hands-On-Data-Structures-and-Algorithms-with-RUST). It's been a great resource! I highly recommend it while reading Rust.
+
+There is another Rustacean who has tackled these problems in Rust [here](https://github.com/brndnmtthws/cracking-the-coding-interview-rust). I found his solutions really helpful, and he has a cool twitch channel. But I think the solutions in this repo are more thorough.
+
+The Linked Lists section in Chapter 2 was largely influenced by this article: https://rust-unofficial.github.io/too-many-lists/
