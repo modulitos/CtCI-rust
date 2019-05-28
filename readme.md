@@ -20,16 +20,22 @@ $ cargo build
 $ cargo test
 ```
 
-You can run the tests for a specific library like so:
+You can run the tests for a specific question like so:
 
 ```ShellSession
-$ cargo test --lib fifth
+$ cargo test --bin ch3-p2_stack-with-min
+```
+
+You can also run the tests for a specific library like so:
+
+```ShellSession
+$ cargo test --lib stack
 ```
 
 ## Credits:
 
-The data structure implementations are largely influenced by the data structures in this book: [Hands on Data Structures and Algorithms with Rust book](https://github.com/PacktPublishing/Hands-On-Data-Structures-and-Algorithms-with-RUST). It's been a great resource! I highly recommend it while reading Rust.
+The data structure implementations are largely influenced by the data structures in this book: [Hands on Data Structures and Algorithms with Rust book](https://github.com/PacktPublishing/Hands-On-Data-Structures-and-Algorithms-with-RUST). It's been very helpful reading that resource alongside CtCI.
 
-There is another Rustacean who has tackled these problems in Rust [here](https://github.com/brndnmtthws/cracking-the-coding-interview-rust). I found his solutions really helpful, and he has a cool twitch channel. But I think the solutions in this repo are more thorough.
+There is another Rustacean who has tackled these problems in Rust [here](https://github.com/brndnmtthws/cracking-the-coding-interview-rust). He has a cool twitch channel where his effort was broadcasted live, and I found his solutions helpful to review while I was working through these problems. Although I think the solutions in this repo are more thorough and idiomatic.
 
 The Linked Lists section in Chapter 2 was largely influenced by this article: https://rust-unofficial.github.io/too-many-lists/
