@@ -122,4 +122,53 @@ mod test {
         assert!(s.pop(1).is_err());
         assert!(s.pop(2).is_err());
     }
+
+    #[test]
+    fn push_then_pop() {
+        let mut s: ThreeStacks<u64> = ThreeStacks::new();
+        s.push(1, 0).is_ok();
+        assert_eq!(s.pop(0), Ok(1));
+    }
+
+    #[test]
+    fn push_then_pop_too_many() {
+        let mut s: ThreeStacks<u64> = ThreeStacks::new();
+        s.push(1, 0).is_ok();
+        s.push(2, 0).is_ok();
+        s.push(3, 0).is_ok();
+        assert_eq!(s.pop(0), Ok(3));
+        assert_eq!(s.pop(0), Ok(2));
+        assert_eq!(s.pop(0), Ok(1));
+        assert!(s.pop(0).is_err());
+
+        s.push(1, 1).is_ok();
+        s.push(2, 1).is_ok();
+        s.push(3, 1).is_ok();
+        assert_eq!(s.pop(1), Ok(3));
+        assert_eq!(s.pop(1), Ok(2));
+        assert_eq!(s.pop(1), Ok(1));
+        assert!(s.pop(1).is_err());
+
+        s.push(1, 2).is_ok();
+        s.push(2, 2).is_ok();
+        s.push(3, 2).is_ok();
+        assert_eq!(s.pop(2), Ok(3));
+        assert_eq!(s.pop(2), Ok(2));
+        assert_eq!(s.pop(2), Ok(1));
+        assert!(s.pop(2).is_err());
+
+    }
+
+    #[test]
+    fn push_too_many_then_pop_too_many() {
+        let mut s: ThreeStacks<u64> = ThreeStacks::new();
+        s.push(1, 0).is_ok();
+        s.push(2, 0).is_ok();
+        s.push(3, 0).is_ok();
+        s.push(4, 0).is_err();
+        assert_eq!(s.pop(0), Ok(3));
+        assert_eq!(s.pop(0), Ok(2));
+        assert_eq!(s.pop(0), Ok(1));
+        assert!(s.pop(0).is_err());
+    }
 }
