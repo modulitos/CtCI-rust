@@ -28,12 +28,19 @@ where
         if stack > self.indexes.len() {
             return Err("wrong stack reference!");
         }
-        let index = self.indexes[stack];
-        if index > (index * ((self.cap + 1) / 3)) {
-            return Err("out of room!");
+        if self.is_full(stack) {
+            return Err("out of room! Push aborted.");
         }
-        self.buf[index] = Some(value);
+        self.buf[self.indexes[stack]] = Some(value);
+        self.indexes[stack] += 1;
         return Ok(());
+    }
+
+    fn is_full(&self, stack: usize) -> bool {
+        let index = self.indexes[stack];
+        println!("index: {}", index);
+        println!("index max: {},", ((stack + 1) * ((self.cap + 1) / 3)));
+        index >= (stack + 1) * ((self.cap + 1) / 3)
     }
 
     fn grow(&mut self, min_cap: usize) {
@@ -60,9 +67,16 @@ mod test {
     }
 
     #[test]
-    fn insert_one_item() {
+    fn push_one() {
         let mut s: ThreeStacks<u64> = ThreeStacks::new();
-        s.push(5, 0);
-        assert!(true);
+        assert!(s.push(5, 0).is_ok());
+    }
+    #[test]
+    fn push_too_many() {
+        let mut s: ThreeStacks<u64> = ThreeStacks::new();
+        assert!(s.push(1, 0).is_ok());
+        assert!(s.push(2, 0).is_ok());
+        assert!(s.push(3, 0).is_ok());
+        assert!(s.push(4, 0).is_err());
     }
 }
