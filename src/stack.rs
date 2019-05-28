@@ -67,7 +67,7 @@ where
     fn grow(&mut self, min_cap: usize) {
         let old_cap = self.buf.len();
         println!("old_cap: {}", old_cap);
-        let mut new_cap = old_cap << 1;  // double the size of the cap
+        let mut new_cap = old_cap << 1; // double the size of the cap
         println!("newcap: {}", new_cap);
         new_cap = cmp::max(new_cap, min_cap);
         new_cap = cmp::min(new_cap, usize::max_value());
@@ -84,13 +84,13 @@ mod test {
 
     #[test]
     fn create() {
-        let _:Stack<u64> = Stack::new();
+        let _: Stack<u64> = Stack::new();
         assert!(true);
     }
 
     #[test]
     fn create_with_capacity() {
-        let _:Stack<u64> = Stack::new().with_capacity(3).create();
+        let _: Stack<u64> = Stack::new().with_capacity(3).create();
         assert!(true);
     }
 
@@ -99,6 +99,13 @@ mod test {
         let mut s: Stack<u64> = Stack::new();
         assert!(s.push(5).is_ok());
     }
+
+    #[test]
+    fn pop_empty() {
+        let mut s: Stack<u64> = Stack::new();
+        assert!(s.pop().is_err());
+    }
+
 
     #[test]
     fn push_one_pop_one() {
@@ -112,12 +119,27 @@ mod test {
         let mut s: Stack<u64> = Stack::new().with_capacity(2).create();
         assert!(s.push(1).is_ok());
         assert!(s.push(2).is_ok());
-        assert!(s.push(3).is_ok());  // grow to 4!
+        assert!(s.push(3).is_ok()); // grow to 4!
         assert!(s.push(4).is_ok());
-        assert!(s.push(4).is_ok());  // grow to 8!
+        assert!(s.push(4).is_ok()); // grow to 8!
         assert!(s.push(4).is_ok());
         assert!(s.push(4).is_ok());
         assert!(s.push(4).is_ok());
-        assert!(s.push(4).is_ok());  // grow to 9!
+        assert!(s.push(4).is_ok()); // grow to 9!
+    }
+
+    #[test]
+    fn push_then_pop() {
+        let mut s: Stack<u64> = Stack::new().with_capacity(2).create();
+        assert!(s.push(1).is_ok());
+        assert!(s.push(2).is_ok());
+        assert!(s.push(3).is_ok()); // grow to 4!
+        assert!(s.push(4).is_ok());
+        assert!(s.push(5).is_ok()); // grow to 8!
+        assert_eq!(s.pop(), Ok(5));
+        assert_eq!(s.pop(), Ok(4));
+        assert_eq!(s.pop(), Ok(3));
+        assert_eq!(s.pop(), Ok(2));
+        assert_eq!(s.pop(), Ok(1));
     }
 }
