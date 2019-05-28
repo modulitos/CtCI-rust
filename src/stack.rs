@@ -1,3 +1,7 @@
+// Stack implementation using a dynamically sized array. Inspired by
+// the code samples in this book:
+// https://github.com/PacktPublishing/Hands-On-Data-Structures-and-Algorithms-with-Rust/blob/e79494a07c8d771e0d357ed05eb6d7ddb58a3bf8/Chapter04/src/dynamic_array.rs
+
 use std::boxed::Box;
 use std::cmp;
 

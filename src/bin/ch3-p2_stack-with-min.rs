@@ -20,11 +20,25 @@ where
     fn push(&mut self, value: T) {
         self.stack.push(value.clone());
         if let Some(curr_min) = self.mins.peek() {
-            if value < curr_min {
+            if value <= curr_min {
                 self.mins.push(value);
             }
         } else {
             self.mins.push(value);
+        }
+    }
+
+    fn pop(&mut self) -> Option<T> {
+        if let Some(value) = self.stack.pop() {
+            // Invariant: value can never be less than the last item
+            // in self.mins:
+            if value == self.mins.peek().unwrap() {
+                // Invariant: self.mins can never be empty here:
+                self.mins.pop().unwrap();
+            }
+            Some(value)
+        } else {
+            None
         }
     }
 
@@ -42,6 +56,23 @@ mod test {
         s.push(1);
         s.push(2);
         s.push(3);
+        assert_eq!(s.get_min(), Some(1));
+    }
+
+    #[test]
+    fn get_min_after_pop() {
+        let mut s: MinStack<u64> = MinStack::new();
+        s.push(3);
+        s.push(2);
+        s.push(1);
+        assert_eq!(s.get_min(), Some(1));
+        s.pop();
+        assert_eq!(s.get_min(), Some(2));
+        s.pop();
+        assert_eq!(s.get_min(), Some(3));
+        s.push(1);
+        assert_eq!(s.get_min(), Some(1));
+        s.push(2);
         assert_eq!(s.get_min(), Some(1));
     }
 }
