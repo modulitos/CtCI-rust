@@ -34,36 +34,35 @@ where
         self
     }
 
-    pub fn push(&mut self, value: T) -> Result<(), &str> {
+    pub fn push(&mut self, value: T) {
         if self.is_full() {
             self.grow(self.cap + 1);
         }
         self.buf[self.length] = Some(value);
         self.length += 1;
-        Ok(())
     }
 
-    pub fn peek(&mut self) -> Result<Option<T>, &str> {
+    pub fn peek(&mut self) -> Option<T> {
         if self.is_empty() {
-            return Ok(None);
+            return None;
         }
         if let Some(value) = self.buf[self.length - 1].clone() {
-            Ok(Some(value))
+            Some(value)
         } else {
-            Err("Stack.peek: corrupted state of stack!!!")
+            panic!("Stack.peek: corrupted state of stack!!!")
         }
     }
 
-    pub fn pop(&mut self) -> Result<T, &str> {
+    pub fn pop(&mut self) -> Option<T> {
         if self.is_empty() {
-            return Err("stack is empty! pop aborted");
+            return None;
         }
 
         self.length -= 1;
         if let Some(value) = self.buf[self.length].clone() {
-            Ok(value)
+            Some(value)
         } else {
-            Err("Stack.pop: corrupted state of stack!!!")
+            panic!("Stack.pop: corrupted state of stack!!!")
         }
     }
 
@@ -108,62 +107,62 @@ mod test {
     #[test]
     fn push_one() {
         let mut s: Stack<u64> = Stack::new();
-        assert!(s.push(5).is_ok());
+        s.push(5);
     }
 
     #[test]
     fn pop_empty() {
         let mut s: Stack<u64> = Stack::new();
-        assert!(s.pop().is_err());
+        assert_eq!(s.pop(), None);
     }
 
     #[test]
     fn peek_empty() {
         let mut s: Stack<u64> = Stack::new();
-        assert_eq!(s.peek(), Ok(None));
+        assert_eq!(s.peek(), None);
     }
 
     #[test]
     fn push_then_peek() {
         let mut s: Stack<u64> = Stack::new();
-        assert!(s.push(1).is_ok());
-        assert_eq!(s.peek(), Ok(Some(1)));
-        assert_eq!(s.peek(), Ok(Some(1)));
+        s.push(1);
+        assert_eq!(s.peek(), Some(1));
+        assert_eq!(s.peek(), Some(1));
     }
 
     #[test]
     fn push_one_pop_one() {
         let mut s: Stack<u64> = Stack::new();
-        assert!(s.push(5).is_ok());
-        assert_eq!(s.pop(), Ok(5));
+        s.push(5);
+        assert_eq!(s.pop(), Some(5));
     }
 
     #[test]
     fn push_until_grow() {
         let mut s: Stack<u64> = Stack::new().with_capacity(2).create();
-        assert!(s.push(1).is_ok());
-        assert!(s.push(2).is_ok());
-        assert!(s.push(3).is_ok()); // grow to 4!
-        assert!(s.push(4).is_ok());
-        assert!(s.push(4).is_ok()); // grow to 8!
-        assert!(s.push(4).is_ok());
-        assert!(s.push(4).is_ok());
-        assert!(s.push(4).is_ok());
-        assert!(s.push(4).is_ok()); // grow to 9!
+        s.push(1);
+        s.push(2);
+        s.push(3); // grow to 4!
+        s.push(4);
+        s.push(4); // grow to 8!
+        s.push(4);
+        s.push(4);
+        s.push(4);
+        s.push(4); // grow to 9!
     }
 
     #[test]
     fn push_then_pop() {
         let mut s: Stack<u64> = Stack::new().with_capacity(2).create();
-        assert!(s.push(1).is_ok());
-        assert!(s.push(2).is_ok());
-        assert!(s.push(3).is_ok()); // grow to 4!
-        assert!(s.push(4).is_ok());
-        assert!(s.push(5).is_ok()); // grow to 8!
-        assert_eq!(s.pop(), Ok(5));
-        assert_eq!(s.pop(), Ok(4));
-        assert_eq!(s.pop(), Ok(3));
-        assert_eq!(s.pop(), Ok(2));
-        assert_eq!(s.pop(), Ok(1));
+        s.push(1);
+        s.push(2);
+        s.push(3);
+        s.push(4);
+        s.push(5);
+        assert_eq!(s.pop(), Some(5));
+        assert_eq!(s.pop(), Some(4));
+        assert_eq!(s.pop(), Some(3));
+        assert_eq!(s.pop(), Some(2));
+        assert_eq!(s.pop(), Some(1));
     }
 }
