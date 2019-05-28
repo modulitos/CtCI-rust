@@ -43,6 +43,17 @@ where
         Ok(())
     }
 
+    pub fn peek(&mut self) -> Result<Option<T>, &str> {
+        if self.is_empty() {
+            return Ok(None);
+        }
+        if let Some(value) = self.buf[self.length - 1].clone() {
+            Ok(Some(value))
+        } else {
+            Err("Stack.peek: corrupted state of stack!!!")
+        }
+    }
+
     pub fn pop(&mut self) -> Result<T, &str> {
         if self.is_empty() {
             return Err("stack is empty! pop aborted");
@@ -52,7 +63,7 @@ where
         if let Some(value) = self.buf[self.length].clone() {
             Ok(value)
         } else {
-            Err("corrupted state of stack!!!")
+            Err("Stack.pop: corrupted state of stack!!!")
         }
     }
 
@@ -106,6 +117,19 @@ mod test {
         assert!(s.pop().is_err());
     }
 
+    #[test]
+    fn peek_empty() {
+        let mut s: Stack<u64> = Stack::new();
+        assert_eq!(s.peek(), Ok(None));
+    }
+
+    #[test]
+    fn push_then_peek() {
+        let mut s: Stack<u64> = Stack::new();
+        assert!(s.push(1).is_ok());
+        assert_eq!(s.peek(), Ok(Some(1)));
+        assert_eq!(s.peek(), Ok(Some(1)));
+    }
 
     #[test]
     fn push_one_pop_one() {
