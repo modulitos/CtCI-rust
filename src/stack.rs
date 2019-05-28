@@ -42,7 +42,7 @@ where
         self.length += 1;
     }
 
-    pub fn peek(&mut self) -> Option<T> {
+    pub fn peek(&self) -> Option<T> {
         if self.is_empty() {
             return None;
         }
