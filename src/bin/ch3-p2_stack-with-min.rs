@@ -75,4 +75,27 @@ mod test {
         s.push(2);
         assert_eq!(s.get_min(), Some(1));
     }
+
+    #[test]
+    fn push_then_get_identical_mins() {
+        let mut s: MinStack<u64> = MinStack::new();
+        s.push(3);
+        s.push(1);
+        s.push(2);
+        s.push(1);
+        assert_eq!(s.get_min(), Some(1));
+        s.pop();
+        assert_eq!(s.get_min(), Some(1));
+        s.pop();
+        assert_eq!(s.get_min(), Some(1));
+        s.pop();
+        assert_eq!(s.get_min(), Some(3));
+        s.push(2);
+        s.push(2);
+        assert_eq!(s.get_min(), Some(2));
+        s.pop();
+        assert_eq!(s.get_min(), Some(2));
+        s.pop();
+        assert_eq!(s.get_min(), Some(3));
+    }
 }
