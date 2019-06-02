@@ -13,12 +13,12 @@
 // pop operation on a specific sub-stack.
 
 use cracking::Stack;
+use std::vec::Vec;
 
 struct SetOfStacks<T> {
-    stacks: Box<[Stack<T>]>,
+    stacks: Vec<Stack<T>>,
 }
 
-const NUMBER_OF_STACKS: u8 = 3;
 const STACK_MAX_LENGTH: u8 = 3;
 
 impl<T> SetOfStacks<T>
@@ -26,23 +26,26 @@ where
     T: std::clone::Clone + std::cmp::PartialOrd,
 {
     fn new() -> Self {
-        Self {
-            stacks: vec![
-                Stack::new()
-                    .with_capacity(usize::from(STACK_MAX_LENGTH))
-                    .is_growable(false)
-                    .create();
-                usize::from(NUMBER_OF_STACKS)
-            ]
-            .into_boxed_slice(),
-        }
+        let mut stacks = Vec::new();
+        stacks.push(
+            Stack::new()
+                .with_capacity(usize::from(STACK_MAX_LENGTH))
+                .is_growable(false)
+                .create(),
+        );
+        Self { stacks }
     }
 
     fn push(&mut self, value: T) {
         if let Some(first_non_full) = self.stacks.iter_mut().find(|stack| !stack.is_full()) {
             first_non_full.push(value);
         } else {
-            panic!("all full!");
+            let mut s = Stack::new()
+                .is_growable(false)
+                .with_capacity(usize::from(STACK_MAX_LENGTH))
+                .create();
+            s.push(value);
+            self.stacks.push(s);
         }
     }
 
@@ -156,7 +159,7 @@ mod test {
         s.push(2);
         s.push(3);
         s.push(4);
-        assert_eq!(s.pop_at(0), Some(3));  // this should shift 4 down to the first stack
+        assert_eq!(s.pop_at(0), Some(3)); // this should shift 4 down to the first stack
         s.push(5);
         s.push(6);
         s.push(7);
@@ -177,13 +180,13 @@ mod test {
         s.push(2);
         s.push(3);
         s.push(4);
-        assert_eq!(s.pop_at(0), Some(3));  // this should shift 4 down to the first stack
+        assert_eq!(s.pop_at(0), Some(3)); // this should shift 4 down to the first stack
         s.push(5);
         s.push(6);
         s.push(7);
         s.push(8);
-        assert_eq!(s.pop_at(1), Some(7));  // this should shift 8 down to the second stack
-        assert_eq!(s.pop_at(0), Some(4));  // this should shift 5 down to the first stack
+        assert_eq!(s.pop_at(1), Some(7)); // this should shift 8 down to the second stack
+        assert_eq!(s.pop_at(0), Some(4)); // this should shift 5 down to the first stack
         assert_eq!(s.pop(), Some(8));
         assert_eq!(s.pop(), Some(6));
         assert_eq!(s.pop(), Some(5));
