@@ -7,6 +7,7 @@ use std::cmp;
 
 type Node<T> = Option<T>;
 
+#[derive(Clone)]
 pub struct Stack<T> {
     buf: Box<[Node<T>]>,
     cap: usize,
