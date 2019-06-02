@@ -18,7 +18,8 @@ struct SetOfStacks<T> {
     stacks: Box<[Stack<T>]>,
 }
 
-const SET_LENGTH:u8 = 3;
+const NUMBER_OF_STACKS: u8 = 3;
+const STACK_MAX_LENGTH: u8 = 3;
 
 impl<T> SetOfStacks<T>
 where
@@ -26,16 +27,39 @@ where
 {
     fn new() -> Self {
         Self {
-            stacks: vec![Stack::new(); usize::from(SET_LENGTH)].into_boxed_slice(),
+            stacks: vec![
+                Stack::new()
+                    .with_capacity(usize::from(STACK_MAX_LENGTH))
+                    .is_growable(false)
+                    .create();
+                usize::from(NUMBER_OF_STACKS)
+            ]
+            .into_boxed_slice(),
         }
     }
 
     fn push(&mut self, value: T) {
-        self.stacks[0].push(value);
+        if let Some(first_non_full) = self.stacks.iter_mut().find(|stack| !stack.is_full()) {
+            first_non_full.push(value);
+        } else {
+            panic!("all full!");
+        }
     }
 
     fn pop(&mut self) -> Option<T> {
-        self.stacks[0].pop()
+        if let Some(first_non_empty) = self.stacks.iter_mut().rev().find(|stack| !stack.is_empty())
+        {
+            first_non_empty.pop()
+        } else {
+            panic!("all empty!!!");
+        }
+    }
+
+    fn pop_at(&mut self, index: u8) -> Option<T> {
+        if usize::from(index) >= self.stacks.len() {
+            panic!("pop_at: index out of range: {}", index);
+        }
+        self.stacks[usize::from(index)].pop()
     }
 }
 
@@ -49,4 +73,45 @@ mod test {
         assert_eq!(s.pop(), Some(1));
     }
 
+    #[test]
+    fn push_first_stack_beyond_capacity() {
+        let mut s: SetOfStacks<u64> = SetOfStacks::new();
+        s.push(1);
+        s.push(2);
+        s.push(3);
+        s.push(4);
+        assert_eq!(s.pop(), Some(4));
+        assert_eq!(s.pop(), Some(3));
+        assert_eq!(s.pop(), Some(2));
+        assert_eq!(s.pop(), Some(1));
+    }
+
+    #[test]
+    fn push_second_stack_beyond_capacity() {
+        let mut s: SetOfStacks<u64> = SetOfStacks::new();
+        s.push(1);
+        s.push(2);
+        s.push(3);
+        s.push(4);
+        s.push(5);
+        s.push(6);
+        s.push(7);
+        assert_eq!(s.pop(), Some(7));
+        assert_eq!(s.pop(), Some(6));
+        assert_eq!(s.pop(), Some(5));
+        assert_eq!(s.pop(), Some(4));
+        assert_eq!(s.pop(), Some(3));
+        assert_eq!(s.pop(), Some(2));
+        assert_eq!(s.pop(), Some(1));
+    }
+
+    #[test]
+    fn pop_at() {
+        let mut s: SetOfStacks<u64> = SetOfStacks::new();
+        s.push(1);
+        s.push(2);
+        s.push(3);
+        s.push(4);
+        assert_eq!(s.pop_at(0), Some(3));
+    }
 }

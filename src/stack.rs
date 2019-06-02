@@ -11,6 +11,7 @@ type Node<T> = Option<T>;
 pub struct Stack<T> {
     buf: Box<[Node<T>]>,
     cap: usize,
+    is_growable: bool,
     length: usize,
 }
 
@@ -25,6 +26,7 @@ where
             buf: vec![None; DEFAULT_CAP].into_boxed_slice(),
             cap: DEFAULT_CAP,
             length: 0,
+            is_growable: true,
         }
     }
 
@@ -35,13 +37,19 @@ where
         self
     }
 
+    // Using the builder pattern to allow for optional arguments.
+    pub fn is_growable(mut self, is_growable: bool) -> Self {
+        self.is_growable = is_growable;
+        self
+    }
+
     pub fn create(self) -> Self {
         self
     }
 
     pub fn push(&mut self, value: T) {
         if self.is_full() {
-            self.grow(self.cap + 1);
+            self.grow(self.cap + 1)
         }
         self.buf[self.length] = Some(value);
         self.length += 1;
@@ -54,7 +62,10 @@ where
         if let Some(value) = self.buf[self.length - 1].clone() {
             Some(value)
         } else {
-            panic!("Stack.peek: corrupted state of stack!!!")
+            panic!(
+                "Stack.peek: invariant violated in self.buf, at index: {}",
+                self.length - 1
+            )
         }
     }
 
@@ -67,19 +78,25 @@ where
         if let Some(value) = self.buf[self.length].clone() {
             Some(value)
         } else {
-            panic!("Stack.pop: corrupted state of stack!!!")
+            panic!(
+                "Stack.pop: invariant violated in self.buf, at index: {}",
+                self.length - 1
+            )
         }
     }
 
-    fn is_full(&self) -> bool {
+    pub fn is_full(&self) -> bool {
         self.length == self.cap
     }
 
-    fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.length == 0
     }
 
     fn grow(&mut self, min_cap: usize) {
+        if !self.is_growable {
+            panic!("size exceeded.");
+        }
         let old_cap = self.buf.len();
         println!("old_cap: {}", old_cap);
         let mut new_cap = old_cap << 1; // double the size of the cap
@@ -107,6 +124,16 @@ mod test {
     fn create_with_capacity() {
         let _: Stack<u64> = Stack::new().with_capacity(3).create();
         assert!(true);
+    }
+
+    #[test]
+    #[should_panic(expected = "size exceeded.")]
+    fn create_non_growable() {
+        let mut s: Stack<u64> = Stack::new().with_capacity(3).is_growable(false).create();
+        s.push(1);
+        s.push(2);
+        s.push(3);
+        s.push(4);
     }
 
     #[test]
