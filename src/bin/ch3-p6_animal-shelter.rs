@@ -46,20 +46,22 @@ impl AnimalShelter {
     }
 
     fn dequeue_any(&mut self) -> Option<Animal> {
-        // NOTE: this would be much easier if LinkedList had a `peek` method!
+        // Since LinkedList has no `peek` method, we have to pop and
+        // push back the unused dog/cat:
         let (next_dog, next_cat) = (self.dogs.pop_front(), self.cats.pop_front());
         match (next_dog.clone(), next_cat.clone()) {
-            (Some(Animal::Dog(..)), Some(Animal::Cat(..))) => {
-                // TODO: compare the arrival times of both dog and cat:
-                self.cats.push_front(next_cat.unwrap());
-                next_dog
+            (Some(Animal::Dog(dog)), Some(Animal::Cat(cat))) => {
+                // compare the arrival times of the dog and cat:
+                if dog < cat {
+                    self.cats.push_front(next_cat.unwrap());
+                    next_dog
+                } else {
+                    self.dogs.push_front(next_dog.unwrap());
+                    next_cat
+                }
             }
-            (Some(Animal::Dog(..)), None) => {
-                next_dog
-            }
-            (None, Some(Animal::Cat(..))) => {
-                next_cat
-            }
+            (Some(Animal::Dog(..)), None) => next_dog,
+            (None, Some(Animal::Cat(..))) => next_cat,
             (None, None) => None,
             // TODO: ideally, we push these back into the linked list
             // for better error recovery:
@@ -116,5 +118,16 @@ mod tests {
         shelter.enqueue(cat.clone());
         assert_eq!(shelter.dequeue_any(), Some(dog));
         assert_eq!(shelter.dequeue_any(), Some(cat));
+    }
+
+    #[test]
+    fn dequeue_any_cat_first() {
+        let mut shelter = AnimalShelter::new();
+        let cat = Animal::Cat(Instant::now());
+        let dog = Animal::Dog(Instant::now());
+        shelter.enqueue(dog.clone());
+        shelter.enqueue(cat.clone());
+        assert_eq!(shelter.dequeue_any(), Some(cat));
+        assert_eq!(shelter.dequeue_any(), Some(dog));
     }
 }
