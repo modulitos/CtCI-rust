@@ -34,7 +34,6 @@ where
         + std::hash::Hash
         + std::clone::Clone
         + std::cmp::PartialOrd
-        + std::cmp::PartialOrd
         + std::fmt::Debug,
 {
     pub fn new() -> Self {
