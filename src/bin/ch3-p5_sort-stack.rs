@@ -21,37 +21,31 @@ where
         let mut temp = Stack::<T>::new();
         // pop items off of this stack until we find an item that is
         // out of order (less than the previous)
-        let mut curr_option = None;
-        while let Some(next) = self.pop() {
-            // while let Some(next) = self.peek() {
-            if let Some(curr) = curr_option {
-                if next >= curr {
-                    // next is in the correct order - move along!
+        while let Some(curr) = self.pop() {
+            if let Some(prev) = temp.peek() {
+                if curr >= prev {
+                    // curr is in the correct order - move along!
                     temp.push(curr);
-                    curr_option = Some(next);
                 } else {
-                    // next is out of order!
+                    // curr is out of order!
 
                     // Pop the new stack onto the old one until next
                     // is at the bottom or larger than the next item:
-                    loop {
-                        let prev = temp.peek();
-                        if prev.is_some() && next < prev.unwrap() {
+                    // loop {
+                    while let Some(prev) = temp.peek() {
+                        if curr < prev {
                             self.push(temp.pop().unwrap());
                         } else {
                             break;
                         }
                     }
-                    // then put the 'next' item into the new stack:
-                    temp.push(next);
+                    // then put the 'curr' item into the new stack:
+                    temp.push(curr);
                     // (no need to re-update curr)
                 }
             } else {
-                curr_option = Some(next);
+                temp.push(curr);
             }
-        }
-        if let Some(curr) = curr_option {
-            temp.push(curr);
         }
         // pop all of temp back into our stack:
         while let Some(value) = temp.pop() {
@@ -63,6 +57,16 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sort_2() {
+        let mut s = Stack::<u64>::new();
+        s.push(1);
+        s.push(2);
+        s.sort();
+        assert_eq!(s.pop(), Some(1));
+        assert_eq!(s.pop(), Some(2));
+    }
 
     #[test]
     fn sort_3() {
@@ -88,5 +92,21 @@ mod tests {
         assert_eq!(s.pop(), Some(2));
         assert_eq!(s.pop(), Some(3));
         assert_eq!(s.pop(), Some(4));
+    }
+
+    #[test]
+    fn sort_5() {
+        let mut s = Stack::<u64>::new();
+        s.push(1);
+        s.push(3);
+        s.push(5);
+        s.push(2);
+        s.push(4);
+        s.sort();
+        assert_eq!(s.pop(), Some(1));
+        assert_eq!(s.pop(), Some(2));
+        assert_eq!(s.pop(), Some(3));
+        assert_eq!(s.pop(), Some(4));
+        assert_eq!(s.pop(), Some(5));
     }
 }
