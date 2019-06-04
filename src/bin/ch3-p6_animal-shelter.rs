@@ -10,7 +10,7 @@
 // You may use the built-in Linked List data structure.
 
 use std::collections::LinkedList;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 #[derive(Debug, PartialEq, Clone)]
 enum Animal {
@@ -18,7 +18,7 @@ enum Animal {
     Cat(Instant),
 }
 
-// NOTE: this approach is very verbose:
+// NOTE: this approach is very verbose, but more robust:
 // #[derive(Sized)]
 // trait Animal {}
 
@@ -64,7 +64,8 @@ impl AnimalShelter {
             (None, Some(Animal::Cat(..))) => next_cat,
             (None, None) => None,
             // TODO: ideally, we push these back into the linked list
-            // for better error recovery:
+            // for better error recovery, or use an Animal trait
+            // approach:
             _ => panic!("A dog is on the cats list! Or a cat is in the dog list!"),
         }
     }
