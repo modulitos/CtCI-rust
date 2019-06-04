@@ -13,52 +13,23 @@ use std::collections::LinkedList;
 use std::time::{Duration, Instant};
 
 #[derive(Debug)]
-struct Dog {
-    arrival: Instant,
-}
-
-impl Dog {
-    fn new() -> Self {
-        Self {
-            arrival: Instant::now(),
-        }
-    }
-}
-
-#[derive(Debug)]
-struct Cat {
-    arrival: Instant,
-}
-
-impl Cat {
-    fn new() -> Self {
-        Self {
-            arrival: Instant::now(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(PartialEq)]
+#[derive(Clone)]
 enum Animal {
-    Dog(Dog),
-    Cat(Cat),
+    Dog(Instant),
+    Cat(Instant),
 }
+
+// NOTE: this approach is very verbose:
+// #[derive(Sized)]
+// trait Animal {}
 
 struct AnimalShelter {
-    dogs: LinkedList<Dog>,
-    cats: LinkedList<Cat>,
-    // NOTE: The current implementation is a bit overdone, but I
-    // wanted to explore a robust solution. We could just do the
-    // following and save a lot of troble:
-
-    // dogs: LinkedList<Animal>,
-    // cats: LinkedList<Animal>,
-
-    // where:
-    // enum Animal {
-    //   Dog(Instant),
-    //   Cat(Instant),
-    // }
+    // NOTE: We could have done the following, but it's a bit silly:
+    // dogs: LinkedList<Dog>,
+    // cats: LinkedList<Cat>,
+    dogs: LinkedList<Animal>,
+    cats: LinkedList<Animal>,
 }
 
 impl AnimalShelter {
@@ -71,9 +42,17 @@ impl AnimalShelter {
 
     fn enqueue(&mut self, animal: Animal) {
         match animal {
-            Animal::Dog(animal) => self.dogs.push_back(animal),
-            Animal::Cat(animal) => self.cats.push_back(animal),
+            Animal::Dog(dog) => self.dogs.push_back(Animal::Dog(dog)),
+            Animal::Cat(cat) => self.cats.push_back(Animal::Cat(cat)),
         }
+    }
+
+    fn dequeue_dog(&mut self) -> Option<Animal> {
+        self.dogs.pop_front()
+    }
+
+    fn dequeue_cat(&mut self) -> Option<Animal> {
+        self.cats.pop_front()
     }
 }
 
@@ -82,18 +61,29 @@ mod tests {
 
     #[test]
     fn create_dog_and_cat() {
-        let _ = Dog::new();
-        let _ = Cat::new();
+        let _ = Animal::Dog(Instant::now());
+        let _ = Animal::Cat(Instant::now());
         assert!(true);
     }
 
     #[test]
     fn enqueue_dog_and_cat() {
         let mut shelter = AnimalShelter::new();
-        let dog = Animal::Dog(Dog::new());
-        let cat = Animal::Cat(Cat::new());
+        let dog = Animal::Dog(Instant::now());
+        let cat = Animal::Cat(Instant::now());
         shelter.enqueue(dog);
         shelter.enqueue(cat);
         assert!(true);
+    }
+
+    #[test]
+    fn dequeue_dog() {
+        let mut shelter = AnimalShelter::new();
+        let dog = Animal::Dog(Instant::now());
+        let cat = Animal::Cat(Instant::now());
+        shelter.enqueue(dog.clone());
+        shelter.enqueue(cat.clone());
+        assert_eq!(shelter.dequeue_dog(), Some(dog));
+        assert_eq!(shelter.dequeue_cat(), Some(cat));
     }
 }
