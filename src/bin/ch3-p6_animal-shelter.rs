@@ -12,9 +12,7 @@
 use std::collections::LinkedList;
 use std::time::{Duration, Instant};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Clone)]
 enum Animal {
     Dog(Instant),
     Cat(Instant),
@@ -42,8 +40,30 @@ impl AnimalShelter {
 
     fn enqueue(&mut self, animal: Animal) {
         match animal {
-            Animal::Dog(dog) => self.dogs.push_back(Animal::Dog(dog)),
-            Animal::Cat(cat) => self.cats.push_back(Animal::Cat(cat)),
+            Animal::Dog(..) => self.dogs.push_back(animal),
+            Animal::Cat(..) => self.cats.push_back(animal),
+        }
+    }
+
+    fn dequeue_any(&mut self) -> Option<Animal> {
+        // NOTE: this would be much easier if LinkedList had a `peek` method!
+        let (next_dog, next_cat) = (self.dogs.pop_front(), self.cats.pop_front());
+        match (next_dog.clone(), next_cat.clone()) {
+            (Some(Animal::Dog(..)), Some(Animal::Cat(..))) => {
+                // TODO: compare the arrival times of both dog and cat:
+                self.cats.push_front(next_cat.unwrap());
+                next_dog
+            }
+            (Some(Animal::Dog(..)), None) => {
+                next_dog
+            }
+            (None, Some(Animal::Cat(..))) => {
+                next_cat
+            }
+            (None, None) => None,
+            // TODO: ideally, we push these back into the linked list
+            // for better error recovery:
+            _ => panic!("A dog is on the cats list! Or a cat is in the dog list!"),
         }
     }
 
@@ -77,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn dequeue_dog() {
+    fn dequeue_dog_and_cat() {
         let mut shelter = AnimalShelter::new();
         let dog = Animal::Dog(Instant::now());
         let cat = Animal::Cat(Instant::now());
@@ -85,5 +105,16 @@ mod tests {
         shelter.enqueue(cat.clone());
         assert_eq!(shelter.dequeue_dog(), Some(dog));
         assert_eq!(shelter.dequeue_cat(), Some(cat));
+    }
+
+    #[test]
+    fn dequeue_any() {
+        let mut shelter = AnimalShelter::new();
+        let dog = Animal::Dog(Instant::now());
+        let cat = Animal::Cat(Instant::now());
+        shelter.enqueue(dog.clone());
+        shelter.enqueue(cat.clone());
+        assert_eq!(shelter.dequeue_any(), Some(dog));
+        assert_eq!(shelter.dequeue_any(), Some(cat));
     }
 }
