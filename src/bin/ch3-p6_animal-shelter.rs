@@ -12,32 +12,53 @@
 use std::collections::LinkedList;
 use std::time::{Duration, Instant};
 
+#[derive(Debug)]
 struct Dog {
-    arrival_time: Instant,
+    arrival: Instant,
 }
+
 impl Dog {
     fn new() -> Self {
         Self {
-            arrival_time: Instant::now(),
+            arrival: Instant::now(),
         }
     }
 }
 
+#[derive(Debug)]
 struct Cat {
-    arrival_time: Instant,
+    arrival: Instant,
 }
 
 impl Cat {
     fn new() -> Self {
         Self {
-            arrival_time: Instant::now(),
+            arrival: Instant::now(),
         }
     }
+}
+
+#[derive(Debug)]
+enum Animal {
+    Dog(Dog),
+    Cat(Cat),
 }
 
 struct AnimalShelter {
     dogs: LinkedList<Dog>,
     cats: LinkedList<Cat>,
+    // NOTE: The current implementation is a bit overdone, but I
+    // wanted to explore a robust solution. We could just do the
+    // following and save a lot of troble:
+
+    // dogs: LinkedList<Animal>,
+    // cats: LinkedList<Animal>,
+
+    // where:
+    // enum Animal {
+    //   Dog(Instant),
+    //   Cat(Instant),
+    // }
 }
 
 impl AnimalShelter {
@@ -45,6 +66,13 @@ impl AnimalShelter {
         Self {
             dogs: LinkedList::new(),
             cats: LinkedList::new(),
+        }
+    }
+
+    fn enqueue(&mut self, animal: Animal) {
+        match animal {
+            Animal::Dog(animal) => self.dogs.push_back(animal),
+            Animal::Cat(animal) => self.cats.push_back(animal),
         }
     }
 }
@@ -56,6 +84,16 @@ mod tests {
     fn create_dog_and_cat() {
         let _ = Dog::new();
         let _ = Cat::new();
+        assert!(true);
+    }
+
+    #[test]
+    fn enqueue_dog_and_cat() {
+        let mut shelter = AnimalShelter::new();
+        let dog = Animal::Dog(Dog::new());
+        let cat = Animal::Cat(Cat::new());
+        shelter.enqueue(dog);
+        shelter.enqueue(cat);
         assert!(true);
     }
 }
