@@ -14,8 +14,8 @@ impl ASimpleGraph {
         }
     }
 
-    // fn visit(&self, from: usize, to: usize, visited: Rc<RefCell<HashSet<usize>>>) -> bool {
     fn visit(&self, from: usize, to: usize, visited: &mut HashSet<usize>) -> bool {
+        visited.insert(from);
         if self.adjacency_list[from].contains(&to) {
             // The From node is directly connected to the To node
             true
@@ -27,7 +27,6 @@ impl ASimpleGraph {
                     if !visited.contains(neighbor)  // prevent looping
                         && self.visit(*neighbor, to, visited)
                     {
-                        visited.insert(from);
                         Some(true)
                     } else {
                         None
@@ -61,5 +60,12 @@ mod tests {
 
         assert_eq!(g.route_between_nodes(2, 0), true);
         assert_eq!(g.route_between_nodes(1, 3), false);
+    }
+
+    #[test]
+    fn route_between_nodes() {
+        let g = ASimpleGraph::new(vec![vec![3, 2], vec![], vec![0, 3], vec![1]]);
+        assert_eq!(g.route_between_nodes(0, 1), true);
+        assert_eq!(g.route_between_nodes(3, 0), false);
     }
 }
