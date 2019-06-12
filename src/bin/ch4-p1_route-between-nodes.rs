@@ -2,6 +2,7 @@
 // find out whether there is a route between two nodes
 
 use std::collections::HashSet;
+use std::collections::VecDeque;
 
 struct ASimpleGraph {
     adjacency_list: Vec<Vec<usize>>,
@@ -36,9 +37,31 @@ impl ASimpleGraph {
         }
     }
 
-    fn route_between_nodes(&self, n1: usize, n2: usize) -> bool {
+    // DFS:
+    fn route_between_nodes(&self, start: usize, end: usize) -> bool {
         let mut visited_nodes = HashSet::<usize>::new();
-        self.visit(n1, n2, &mut visited_nodes)
+        self.visit(start, end, &mut visited_nodes)
+    }
+
+    fn route_between_nodes_bfs(&self, start: usize, end: usize) -> bool {
+        let mut visited_nodes = HashSet::<usize>::new();
+        let mut q: VecDeque<usize> = VecDeque::new();
+        q.push_front(start);
+        while !q.is_empty() {
+            let next = q.pop_back().unwrap();
+            if next == end {
+                return true;
+            }
+            visited_nodes.insert(next);
+            let filtered_neighbors: Vec<&usize> = self.adjacency_list[next]
+                .iter()
+                .filter(|neighbor| !visited_nodes.contains(neighbor)).collect();
+            for node in filtered_neighbors.iter() {
+                visited_nodes.insert(**node);
+                q.push_front(**node);
+            }
+        }
+        false
     }
 }
 
@@ -52,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn route_one_edge_between_nodes() {
+    fn route_one_edge_between_nodes_dfs() {
         let g = ASimpleGraph::new(vec![vec![1, 3], vec![], vec![0], vec![]]);
         assert_eq!(g.route_between_nodes(0, 1), true);
         assert_eq!(g.route_between_nodes(0, 2), false);
@@ -63,9 +86,27 @@ mod tests {
     }
 
     #[test]
-    fn route_between_nodes() {
+    fn route_one_edge_between_nodes_bfs() {
+        let g = ASimpleGraph::new(vec![vec![1, 3], vec![], vec![0], vec![]]);
+        assert_eq!(g.route_between_nodes_bfs(0, 1), true);
+        assert_eq!(g.route_between_nodes_bfs(0, 2), false);
+        assert_eq!(g.route_between_nodes_bfs(0, 3), true);
+
+        assert_eq!(g.route_between_nodes_bfs(2, 0), true);
+        assert_eq!(g.route_between_nodes_bfs(1, 3), false);
+    }
+
+    #[test]
+    fn route_between_nodes_dfs() {
         let g = ASimpleGraph::new(vec![vec![3, 2], vec![], vec![0, 3], vec![1]]);
         assert_eq!(g.route_between_nodes(0, 1), true);
         assert_eq!(g.route_between_nodes(3, 0), false);
+    }
+
+    #[test]
+    fn route_between_nodes_bfs() {
+        let g = ASimpleGraph::new(vec![vec![3, 2], vec![], vec![0, 3], vec![1]]);
+        assert_eq!(g.route_between_nodes_bfs(0, 1), true);
+        assert_eq!(g.route_between_nodes_bfs(3, 0), false);
     }
 }
