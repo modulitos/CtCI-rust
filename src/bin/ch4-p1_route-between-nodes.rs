@@ -53,12 +53,11 @@ impl ASimpleGraph {
                 return true;
             }
             visited_nodes.insert(next);
-            let filtered_neighbors: Vec<&usize> = self.adjacency_list[next]
-                .iter()
-                .filter(|neighbor| !visited_nodes.contains(neighbor)).collect();
-            for node in filtered_neighbors.iter() {
-                visited_nodes.insert(**node);
-                q.push_front(**node);
+            for neighbor in self.adjacency_list[next].iter() {
+                if !visited_nodes.contains(neighbor) {
+                    visited_nodes.insert(*neighbor);
+                    q.push_front(*neighbor);
+                }
             }
         }
         false
