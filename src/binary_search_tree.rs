@@ -3,12 +3,13 @@ use std::mem;
 // This implementation is largely inspired by:
 // https://github.com/PacktPublishing/Hands-On-Data-Structures-and-Algorithms-with-Rust/blob/e79494a07c8d771e0d357ed05eb6d7ddb58a3bf8/Chapter05/src/binary_search_tree.rs
 
-type Tree<T> = Option<Box<Node<T>>>;
+pub type Tree<T> = Option<Box<Node<T>>>;
+
 #[derive(Debug)]
-struct Node<T> {
+pub struct Node<T> {
     pub data: T,
-    left: Tree<T>,
-    right: Tree<T>,
+    pub left: Tree<T>,
+    pub right: Tree<T>,
 }
 
 impl<T> Node<T> {
@@ -22,7 +23,7 @@ impl<T> Node<T> {
 }
 
 pub struct BinarySearchTree<T> {
-    root: Tree<T>,
+    pub root: Tree<T>,
     pub length: u64,
 }
 
@@ -46,7 +47,7 @@ where
     fn add_rec(&mut self, node: Tree<T>, data: T) -> Tree<T> {
         match node {
             Some(mut n) => {
-                if n.data <= data {
+                if data <= n.data {
                     n.left = self.add_rec(n.left, data);
                 } else {
                     n.right = self.add_rec(n.right, data);
@@ -66,7 +67,7 @@ where
             Some(n) => {
                 if n.data == data {
                     Some(n.data.clone())
-                } else if n.data < data {
+                } else if data < n.data {
                     self.find_r(&n.left, data)
                 } else {
                     self.find_r(&n.right, data)
