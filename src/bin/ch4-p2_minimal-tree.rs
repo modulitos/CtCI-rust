@@ -9,6 +9,8 @@ trait MinimalTree<T> {
     fn insert_sorted_items(&mut self, sorted: Vec<T>);
 }
 
+// TODO: consider passing a callback here that adds the item directly,
+// instead of building up an iterator.
 fn re_sort_vec<T>(start: usize, end: usize, sorted: &Vec<T>) -> impl Iterator<Item = T>
 where
     T: std::clone::Clone + std::fmt::Debug,
@@ -17,16 +19,19 @@ where
         let median_index = (start + end) / 2;
         let median = sorted[median_index].clone();
         println!("median: {:?}", median);
-        let mut iter1 = re_sort_vec(start, median_index, sorted).into_iter().peekable();
-        let mut iter2 = re_sort_vec(median_index + 1, end, sorted).into_iter().peekable();
+        let mut iter1 = re_sort_vec(start, median_index, sorted).into_iter();
+        let mut iter2 = re_sort_vec(median_index + 1, end, sorted).into_iter();
         let mut result = VecDeque::<T>::new();
         result.push_back(median);
-        while iter1.peek().is_some() || iter2.peek().is_some() {
-            if iter1.peek().is_some() {
-                result.push_back(iter1.next().unwrap());
-            }
-            if iter2.peek().is_some() {
-                result.push_back(iter2.next().unwrap());
+        loop {
+            match (iter1.next(), iter2.next()) {
+                (Some(item1), Some(item2)) => {
+                    result.push_back(item1);
+                    result.push_back(item2);
+                },
+                (Some(item1), None) => result.push_back(item1),
+                (None, Some(item2)) => result.push_back(item2),
+                (None, None) => break,
             }
         }
         result.into_iter()
@@ -43,6 +48,9 @@ impl<T> MinimalTree<T> for BinarySearchTree<T>
 where
     T: std::cmp::PartialOrd + std::clone::Clone + std::fmt::Debug,
 {
+    // TODO: could be more perfomant by recursively adding nodes to
+    // the BST directly, instead of going through the root node every
+    // time with the `self.add` method
     fn insert_sorted_items(&mut self, sorted: Vec<T>) {
         // re-sort our Vec so that the median of the array comes
         // first, followed by the medians of each subarray:
