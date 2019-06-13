@@ -4,6 +4,7 @@ use std::mem;
 // https://github.com/PacktPublishing/Hands-On-Data-Structures-and-Algorithms-with-Rust/blob/e79494a07c8d771e0d357ed05eb6d7ddb58a3bf8/Chapter05/src/binary_search_tree.rs
 
 type Tree<T> = Option<Box<Node<T>>>;
+#[derive(Debug)]
 struct Node<T> {
     pub data: T,
     left: Tree<T>,
@@ -27,8 +28,7 @@ pub struct BinarySearchTree<T> {
 
 impl<T> BinarySearchTree<T>
 where
-    T: std::cmp::PartialOrd
-        + std::clone::Clone
+    T: std::cmp::PartialOrd + std::clone::Clone + std::fmt::Debug,
 {
     pub fn new() -> Self {
         BinarySearchTree {
@@ -75,6 +75,22 @@ where
             _ => None,
         }
     }
+
+    pub fn get_height(&self) -> usize {
+        // traverse the tree dfs, tracking the height along the way:
+        self.walk_in_order(&self.root, 0)
+    }
+
+    fn walk_in_order(&self, node: &Tree<T>, height: usize) -> usize {
+        println!("visiting node: {:?}", node);
+        if let Some(n) = node {
+            let l_height = self.walk_in_order(&n.left, height + 1);
+            let r_height = self.walk_in_order(&n.right, height + 1);
+            std::cmp::max(l_height, r_height)
+        } else {
+            height
+        }
+    }
 }
 
 mod tests {
@@ -115,6 +131,7 @@ mod tests {
         assert_eq!(bst.find(0), Some(0));
         assert_eq!(bst.find(3), Some(3));
     }
+
     #[test]
     fn find_in_bst_incremental() {
         let mut bst = BinarySearchTree::<u32>::new();
@@ -131,5 +148,68 @@ mod tests {
         assert_eq!(bst.find(10), None);
         assert_eq!(bst.find(0), Some(0));
         assert_eq!(bst.find(3), Some(3));
+    }
+
+    #[test]
+    fn test_get_height_0() {
+        let bst = BinarySearchTree::<u32>::new();
+        assert_eq!(bst.get_height(), 0);
+    }
+    #[test]
+    fn test_get_height_1() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(1);
+        assert_eq!(bst.get_height(), 1);
+    }
+    #[test]
+    fn test_get_height_10() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(0);
+        bst.add(1);
+        bst.add(2);
+        bst.add(3);
+        bst.add(4);
+        bst.add(5);
+        bst.add(6);
+        bst.add(7);
+        bst.add(8);
+        bst.add(9);
+        assert_eq!(bst.get_height(), 10);
+    }
+
+    #[test]
+    fn test_get_minimal_height_2() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(2);
+        bst.add(1);
+        bst.add(3);
+        assert_eq!(bst.get_height(), 2);
+    }
+
+    #[test]
+    fn test_get_minimal_height_3() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(5);
+        bst.add(8);
+        bst.add(2);
+        bst.add(1);
+        bst.add(3);
+        bst.add(9);
+        bst.add(7);
+        assert_eq!(bst.get_height(), 3);
+    }
+
+    #[test]
+    fn test_get_minimal_height_4() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(5);
+        bst.add(8);
+        bst.add(2);
+        bst.add(1);
+        bst.add(3);
+        bst.add(9);
+        bst.add(7);
+        bst.add(6);
+        assert_eq!(bst.get_height(), 4);
     }
 }
