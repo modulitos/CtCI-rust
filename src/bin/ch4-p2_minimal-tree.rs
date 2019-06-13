@@ -30,11 +30,12 @@ where
             }
         }
         result.into_iter()
-    } else if start == end {
+    } else {
+        if start != end {
+            panic!("end is less than start?! start:{}, end: {}", start, end);
+        }
         // Base case - return an empty iterator:
         VecDeque::<T>::new().into_iter()
-    } else {
-        panic!("end is less than start?! start:{}, end: {}", start, end)
     }
 }
 
