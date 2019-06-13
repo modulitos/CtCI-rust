@@ -27,7 +27,8 @@ pub struct BinarySearchTree<T> {
 
 impl<T> BinarySearchTree<T>
 where
-    T: std::cmp::PartialOrd,
+    T: std::cmp::PartialOrd
+        + std::clone::Clone
 {
     pub fn new() -> Self {
         BinarySearchTree {
@@ -55,6 +56,25 @@ where
             _ => Node::new(data),
         }
     }
+
+    pub fn find(&self, data: T) -> Option<T> {
+        self.find_r(&self.root, data)
+    }
+
+    fn find_r(&self, node: &Tree<T>, data: T) -> Option<T> {
+        match node {
+            Some(n) => {
+                if n.data == data {
+                    Some(n.data.clone())
+                } else if n.data < data {
+                    self.find_r(&n.left, data)
+                } else {
+                    self.find_r(&n.right, data)
+                }
+            }
+            _ => None,
+        }
+    }
 }
 
 mod tests {
@@ -64,5 +84,52 @@ mod tests {
     fn create_bst() {
         let _ = BinarySearchTree::<u32>::new();
         assert!(true);
+    }
+
+    #[test]
+    fn add_to_bst() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(1);
+        bst.add(2);
+        bst.add(3);
+        bst.add(4);
+        bst.add(5);
+        bst.add(6);
+        bst.add(7);
+        assert!(true);
+    }
+
+    #[test]
+    fn find_in_bst_random() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(5);
+        bst.add(3);
+        bst.add(9);
+        bst.add(1);
+        bst.add(6);
+        bst.add(0);
+        bst.add(7);
+        bst.add(2);
+        bst.add(8);
+        assert_eq!(bst.find(10), None);
+        assert_eq!(bst.find(0), Some(0));
+        assert_eq!(bst.find(3), Some(3));
+    }
+    #[test]
+    fn find_in_bst_incremental() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(0);
+        bst.add(1);
+        bst.add(2);
+        bst.add(3);
+        bst.add(4);
+        bst.add(5);
+        bst.add(6);
+        bst.add(7);
+        bst.add(8);
+        bst.add(9);
+        assert_eq!(bst.find(10), None);
+        assert_eq!(bst.find(0), Some(0));
+        assert_eq!(bst.find(3), Some(3));
     }
 }
