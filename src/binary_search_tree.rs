@@ -5,7 +5,7 @@ use std::mem;
 
 pub type Tree<T> = Option<Box<Node<T>>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node<T> {
     pub data: T,
     pub left: Tree<T>,

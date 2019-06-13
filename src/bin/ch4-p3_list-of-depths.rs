@@ -6,6 +6,7 @@ use cracking::{BinarySearchTree, Tree};
 
 trait ListOfDepths<T> {
     fn get_lists(&self) -> Vec<Vec<T>>;
+    fn get_lists_bfs(&self) -> Vec<Vec<T>>;
     fn walk_lists(&self, node: &Tree<T>, height: usize, lists: &mut Vec<Vec<T>>) -> usize;
 }
 
@@ -13,6 +14,7 @@ impl<T> ListOfDepths<T> for BinarySearchTree<T>
 where
     T: std::cmp::PartialOrd + std::clone::Clone + std::fmt::Debug,
 {
+    // DFS
     fn get_lists(&self) -> Vec<Vec<T>> {
         let mut lists: Vec<Vec<T>> = vec![];
         self.walk_lists(&self.root, 0, &mut lists);
@@ -34,6 +36,31 @@ where
             height
         }
     }
+
+    fn get_lists_bfs(&self) -> Vec<Vec<T>> {
+        let mut lists: Vec<Vec<T>> = vec![];
+        let mut current = Vec::<Tree<T>>::new();
+        if let Some(root) = self.root.clone() {
+            current.push(Some(root));
+        }
+        while !current.is_empty() {
+            // add parent
+            lists.push(current.iter().map(|tree| tree.clone().unwrap().data).collect());
+            let parents = std::mem::replace(&mut current, Vec::<Tree<T>>::new());
+            for parent in parents.iter() {
+                if let Some(tree) = parent {
+                    if let Some(left) = tree.left.clone() {
+                        current.push(Some(left));
+                    }
+                    if let Some(right) = tree.right.clone() {
+                        current.push(Some(right));
+                    }
+                }
+            }
+        }
+        lists
+    }
+
 }
 
 mod tests {
@@ -89,6 +116,53 @@ mod tests {
         bst.add(7);
         bst.add(8);
         let lists = bst.get_lists();
+        assert_eq!(lists, vec![vec![4], vec![2, 6], vec![1, 3, 5, 7], vec![8]]);
+    }
+
+    #[test]
+    fn get_lists_1_bfs() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(1);
+        let lists = bst.get_lists_bfs();
+        assert_eq!(lists, vec![vec![1]]);
+    }
+
+    #[test]
+    fn get_lists_3_bfs() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(2);
+        bst.add(1);
+        bst.add(3);
+        let lists = bst.get_lists_bfs();
+        assert_eq!(lists, vec![vec![2], vec![1, 3]]);
+    }
+
+    #[test]
+    fn get_lists_7_bfs() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(4);
+        bst.add(2);
+        bst.add(6);
+        bst.add(3);
+        bst.add(1);
+        bst.add(5);
+        bst.add(7);
+        let lists = bst.get_lists_bfs();
+        assert_eq!(lists, vec![vec![4], vec![2, 6], vec![1, 3, 5, 7]]);
+    }
+
+    #[test]
+    fn get_lists_8_bfs() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(4);
+        bst.add(2);
+        bst.add(6);
+        bst.add(3);
+        bst.add(1);
+        bst.add(5);
+        bst.add(7);
+        bst.add(8);
+        let lists = bst.get_lists_bfs();
         assert_eq!(lists, vec![vec![4], vec![2, 6], vec![1, 3, 5, 7], vec![8]]);
     }
 }
