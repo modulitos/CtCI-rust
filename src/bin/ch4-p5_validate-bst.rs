@@ -39,6 +39,32 @@ where
         }
         true
     }
+
+}
+
+// A simpler version, but limited to a u32:
+trait ValidateBSTU32 {
+    fn validate_bst_u32(&self) -> bool;
+
+    fn _is_tree_node_valid_u32(&self, node: &Tree<u32>, min: u32, max: u32) -> bool;
+}
+
+impl ValidateBSTU32 for BinarySearchTree<u32> {
+    fn validate_bst_u32(&self) -> bool {
+        self._is_tree_node_valid_u32(&self.root, u32::min_value(), u32::max_value())
+    }
+
+    fn _is_tree_node_valid_u32(&self, node: &Tree<u32>, min: u32, max: u32) -> bool {
+        if let Some(n) = node {
+            if n.data < min || max <= n.data {
+                return false;
+            }
+
+            return self._is_tree_node_valid_u32(&n.left, min, n.data + 1)
+                && self._is_tree_node_valid_u32(&n.right, n.data, max);
+        }
+        true
+    }
 }
 
 mod tests {
@@ -51,6 +77,7 @@ mod tests {
         root.set_right(TreeNode::new_node(3));
         let t = BinarySearchTree::<u32>::new().with_root(root).create();
         assert_eq!(t.validate_bst(), true);
+        assert_eq!(t.validate_bst_u32(), true);
     }
 
     #[test]
@@ -60,6 +87,7 @@ mod tests {
         root.set_right(TreeNode::new_node(3));
         let t = BinarySearchTree::<u32>::new().with_root(root).create();
         assert_eq!(t.validate_bst(), false);
+        assert_eq!(t.validate_bst_u32(), false);
     }
 
     #[test]
@@ -73,6 +101,7 @@ mod tests {
         t.add(9);
         t.add(7);
         assert_eq!(t.validate_bst(), true);
+        assert_eq!(t.validate_bst_u32(), true);
     }
 
     #[test]
@@ -86,6 +115,7 @@ mod tests {
         t.add(6);
         t.add(7);
         assert_eq!(t.validate_bst(), true);
+        assert_eq!(t.validate_bst_u32(), true);
     }
 
     #[test]
@@ -111,13 +141,14 @@ mod tests {
         t.add(16);
         t.add(14);
         assert_eq!(t.validate_bst(), true);
+        assert_eq!(t.validate_bst_u32(), true);
     }
 
     #[test]
     fn invalid_complex_tree() {
         let mut root = TreeNode::<u32>::new_node(3);
         let mut root_right = TreeNode::<u32>::new_node(9);
-        root_right.set_right(TreeNode::new_node(7));  // out of order!
+        root_right.set_right(TreeNode::new_node(7)); // out of order!
         let mut root_left = TreeNode::<u32>::new_node(2);
         root_left.set_left(TreeNode::new_node(1));
         root_left.set_right(TreeNode::new_node(3));
@@ -125,5 +156,6 @@ mod tests {
         root.set_right(root_right);
         let t = BinarySearchTree::<u32>::new().with_root(root).create();
         assert_eq!(t.validate_bst(), false);
+        assert_eq!(t.validate_bst_u32(), false);
     }
 }
