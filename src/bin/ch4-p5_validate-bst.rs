@@ -1,6 +1,8 @@
 // Validate BST: Implement a function to check if a binary tree is a
 // binary search tree.
 
+// clarifying questions: how to handle duplicate values?
+
 use cracking::{BinarySearchTree, Tree, TreeNode};
 
 trait ValidateBST<T> {
@@ -27,11 +29,11 @@ where
                 (Some(l), Some(r)) => {
                     self._is_tree_node_valid(&n.left)
                         && self._is_tree_node_valid(&n.right)
-                        && l.data < n.data
+                        && l.data <= n.data
                         && n.data < r.data
                 }
                 (None, Some(r)) => self._is_tree_node_valid(&n.right) && n.data < r.data,
-                (Some(l), None) => self._is_tree_node_valid(&n.left) && l.data < n.data,
+                (Some(l), None) => self._is_tree_node_valid(&n.left) && l.data <= n.data,
                 (None, None) => true,
             };
         }
@@ -92,7 +94,7 @@ mod tests {
         t.add(5);
         // root.left
         t.add(2);
-        t.add(1);
+        t.add(2); // duplicate value!
         t.add(0);
         t.add(3);
         t.add(4);
