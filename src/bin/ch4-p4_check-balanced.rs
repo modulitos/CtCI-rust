@@ -25,13 +25,10 @@ where
             let right = self.check_node_balanced(&n.right);
             if let (Some(l), Some(r)) = (left, right) {
                 if (l - r).abs() < 2 {
-                    Some(1 + cmp::max(l, r))
-                } else {
-                    None
+                    return Some(1 + cmp::max(l, r));
                 }
-            } else {
-                None
             }
+            None
         } else {
             Some(0)
         }
