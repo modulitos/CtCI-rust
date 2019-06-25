@@ -4,4 +4,4 @@ pub use linked_list::refcell_singly::{LinkedList as SinglyLinkedList, Node, Node
 mod stack;
 mod binary_search_tree;
 pub use stack::Stack;
-pub use binary_search_tree::{BinarySearchTree, Tree};
+pub use binary_search_tree::{BinarySearchTree, Tree, Node as TreeNode};

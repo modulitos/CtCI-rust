@@ -13,7 +13,7 @@ pub struct Node<T> {
 }
 
 impl<T> Node<T> {
-    fn new(data: T) -> Tree<T> {
+    pub fn new(data: T) -> Tree<T> {
         Some(Box::new(Node {
             data,
             left: None,
