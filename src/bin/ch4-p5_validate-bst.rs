@@ -1,45 +1,76 @@
 // Validate BST: Implement a function to check if a binary tree is a
 // binary search tree.
 
-// clarifying questions: how to handle duplicate values?
+// clarifying questions:
+// - how to handle duplicate values?
+// - does the tree only contain numbers?
 
 use cracking::{BinarySearchTree, Tree, TreeNode};
 
 trait ValidateBST<T> {
     fn validate_bst(&self) -> bool;
 
-    fn _is_tree_node_valid(&self, node: &Tree<T>) -> bool;
+    fn _is_tree_node_valid(&self, node: &Tree<T>) -> Option<(Option<T>, Option<T>)>;
 }
 
 impl<T> ValidateBST<T> for BinarySearchTree<T>
 where
+    // T: std::cmp::PartialOrd + std::clone::Clone + std::fmt::Debug +  Bounded,
     T: std::cmp::PartialOrd + std::clone::Clone + std::fmt::Debug,
 {
     fn validate_bst(&self) -> bool {
-        self._is_tree_node_valid(&self.root)
+        self._is_tree_node_valid(&self.root).is_some()
     }
 
-    fn _is_tree_node_valid(&self, node: &Tree<T>) -> bool {
+    fn _is_tree_node_valid(&self, node: &Tree<T>) -> Option<(Option<T>, Option<T>)> {
         // A BST is valid if its left and right subtrees are valid,
-        // and if the value of the left child is less than the
-        // current, and the value of the right child is more than the
-        // current
-        if let Some(n) = node {
-            return match (&n.left, &n.right) {
-                (Some(l), Some(r)) => {
-                    self._is_tree_node_valid(&n.left)
-                        && self._is_tree_node_valid(&n.right)
-                        && l.data <= n.data
-                        && n.data < r.data
-                }
-                (None, Some(r)) => self._is_tree_node_valid(&n.right) && n.data < r.data,
-                (Some(l), None) => self._is_tree_node_valid(&n.left) && l.data <= n.data,
-                (None, None) => true,
-            };
-        }
-        true
-    }
+        // meaning that if the max value of the left subtree is less
+        // than or equal to the current value, and the min value of
+        // the left subtree is greater than the current
 
+        // Returns the min/max values of this node's subtree, or None
+        // if this node's subtree is invalid.
+
+        if let Some(n) = node {
+            let left = self._is_tree_node_valid(&n.left);
+            let right = self._is_tree_node_valid(&n.right);
+            if let (Some(l_results), Some(r_results)) = (left, right) {
+                let (min_l, max_l) = l_results;
+                let (min_r, max_r) = r_results;
+                let (mut min, mut max) = (min_l.clone(), max_r.clone());
+
+                // min_l or max_r is None, meaning it was a leaf node. So
+                // we set the min/max value to be n.data:
+                if min_l.is_none() {
+                    min = Some(n.data.clone());
+                }
+                if max_r.is_none() {
+                    max = Some(n.data.clone());
+                }
+
+                // Check whether any of our subtrees has a max/min value that violates the invariant:
+                if let Some(max) = max_l {
+                    if n.data < max {
+                        return None;
+                    }
+                }
+                if let Some(min) = min_r {
+                    if min <= n.data {
+                        return None;
+                    }
+                }
+
+                return Some((min, max));
+            } else {
+                // One of the subtrees is invalid! Return None:
+                None
+            }
+        } else {
+            // We are at a leaf node - use None to indicate that
+            // min/max are wildcards:
+            Some((None, None))
+        }
+    }
 }
 
 // A simpler version, but limited to a u32:
@@ -145,13 +176,28 @@ mod tests {
     }
 
     #[test]
-    fn invalid_complex_tree() {
+    fn invalid_complex_tree_right_less_than_left() {
         let mut root = TreeNode::<u32>::new_node(3);
         let mut root_right = TreeNode::<u32>::new_node(9);
         root_right.set_right(TreeNode::new_node(7)); // out of order!
         let mut root_left = TreeNode::<u32>::new_node(2);
         root_left.set_left(TreeNode::new_node(1));
         root_left.set_right(TreeNode::new_node(3));
+        root.set_left(root_left);
+        root.set_right(root_right);
+        let t = BinarySearchTree::<u32>::new().with_root(root).create();
+        assert_eq!(t.validate_bst(), false);
+        assert_eq!(t.validate_bst_u32(), false);
+    }
+
+    #[test]
+    fn invalid_complex_tree_left_greater_than_grandparent() {
+        let mut root = TreeNode::<u32>::new_node(3);
+        let mut root_right = TreeNode::<u32>::new_node(9);
+        root_right.set_right(TreeNode::new_node(10));
+        let mut root_left = TreeNode::<u32>::new_node(2);
+        root_left.set_left(TreeNode::new_node(1));
+        root_left.set_right(TreeNode::new_node(4)); // this is greater than root!
         root.set_left(root_left);
         root.set_right(root_right);
         let t = BinarySearchTree::<u32>::new().with_root(root).create();
