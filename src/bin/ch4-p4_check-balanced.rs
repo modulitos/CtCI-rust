@@ -19,12 +19,16 @@ where
         self.check_node_balanced(&self.root).is_some()
     }
 
+    // returns None if the tree isn't balanced, otherwise returns the
+    // height of the subtree
     fn check_node_balanced(&self, node: &Tree<T>) -> Option<i32> {
         if let Some(n) = node {
             let left = self.check_node_balanced(&n.left);
             let right = self.check_node_balanced(&n.right);
             if let (Some(l), Some(r)) = (left, right) {
                 if (l - r).abs() < 2 {
+                    // check that the heights of the subtrees don't
+                    // differ by more than 1:
                     return Some(1 + cmp::max(l, r));
                 }
             }
