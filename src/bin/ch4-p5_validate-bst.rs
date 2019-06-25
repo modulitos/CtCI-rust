@@ -10,19 +10,18 @@ use cracking::{BinarySearchTree, Tree, TreeNode};
 trait ValidateBST<T> {
     fn validate_bst(&self) -> bool;
 
-    fn _is_tree_node_valid(&self, node: &Tree<T>) -> Option<(Option<T>, Option<T>)>;
+    fn _is_tree_node_valid(&self, node: &Tree<T>, min: Option<T>, max: Option<T>) -> bool;
 }
 
 impl<T> ValidateBST<T> for BinarySearchTree<T>
 where
-    // T: std::cmp::PartialOrd + std::clone::Clone + std::fmt::Debug +  Bounded,
     T: std::cmp::PartialOrd + std::clone::Clone + std::fmt::Debug,
 {
     fn validate_bst(&self) -> bool {
-        self._is_tree_node_valid(&self.root).is_some()
+        self._is_tree_node_valid(&self.root, None, None)
     }
 
-    fn _is_tree_node_valid(&self, node: &Tree<T>) -> Option<(Option<T>, Option<T>)> {
+    fn _is_tree_node_valid(&self, node: &Tree<T>, min: Option<T>, max: Option<T>) -> bool {
         // A BST is valid if its left and right subtrees are valid,
         // meaning that if the max value of the left subtree is less
         // than or equal to the current value, and the min value of
@@ -32,43 +31,30 @@ where
         // if this node's subtree is invalid.
 
         if let Some(n) = node {
-            let left = self._is_tree_node_valid(&n.left);
-            let right = self._is_tree_node_valid(&n.right);
-            if let (Some(l_results), Some(r_results)) = (left, right) {
-                let (min_l, max_l) = l_results;
-                let (min_r, max_r) = r_results;
-                let (mut min, mut max) = (min_l.clone(), max_r.clone());
-
-                // min_l or max_r is None, meaning it was a leaf node. So
-                // we set the min/max value to be n.data:
-                if min_l.is_none() {
-                    min = Some(n.data.clone());
+            // check whether the left subtree is valid:
+            if let Some(mn) = min.clone() {
+                if n.data <= mn {
+                    return false;
                 }
-                if max_r.is_none() {
-                    max = Some(n.data.clone());
-                }
-
-                // Check whether any of our subtrees has a max/min value that violates the invariant:
-                if let Some(max) = max_l {
-                    if n.data < max {
-                        return None;
-                    }
-                }
-                if let Some(min) = min_r {
-                    if min <= n.data {
-                        return None;
-                    }
-                }
-
-                return Some((min, max));
-            } else {
-                // One of the subtrees is invalid! Return None:
-                None
             }
+            if !self._is_tree_node_valid(&n.left, min, Some(n.data.clone())) {
+                return false;
+            }
+
+            // check whether the right subtree is valid:
+            if let Some(mx) = max.clone() {
+                if n.data > mx {
+                    return false;
+                }
+            }
+            if !self._is_tree_node_valid(&n.right, Some(n.data.clone()), max) {
+                return false;
+            }
+
+            true
         } else {
-            // We are at a leaf node - use None to indicate that
-            // min/max are wildcards:
-            Some((None, None))
+            // We are at a leaf node:
+            true
         }
     }
 }
