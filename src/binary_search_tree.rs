@@ -20,6 +20,22 @@ impl<T> Node<T> {
             right: None,
         }))
     }
+
+    pub fn new_node(data: T) -> Node<T> {
+        Node {
+            data,
+            left: None,
+            right: None,
+        }
+    }
+
+    pub fn set_left(&mut self, node: Node<T>) {
+        self.left = Some(Box::new(node));
+    }
+
+    pub fn set_right(&mut self, node: Node<T>) {
+        self.right = Some(Box::new(node));
+    }
 }
 
 pub struct BinarySearchTree<T> {
@@ -36,6 +52,16 @@ where
             root: None,
             length: 0,
         }
+    }
+
+    // Using the builder pattern to allow for optional arguments.
+    pub fn with_root(mut self, root: Node<T>) -> Self {
+        self.root = Some(Box::new(root));
+        self
+    }
+
+    pub fn create(self) -> Self {
+        self
     }
 
     pub fn add(&mut self, data: T) {

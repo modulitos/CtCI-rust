@@ -1,7 +1,7 @@
 // Validate BST: Implement a function to check if a binary tree is a
 // binary search tree.
 
-use cracking::{BinarySearchTree, Tree, TreeNode};
+use cracking::{BinarySearchTree, TreeNode};
 
 trait ValidateBST<T> {
     fn validate_bst(&self) -> bool;
@@ -23,12 +23,19 @@ mod tests {
 
     #[test]
     fn create_test_tree() {
-        let mut tree = BinarySearchTree::<u32>::new();
-        let mut root = TreeNode::new(2);
-        let mut raw_root = root.take().unwrap();
-        raw_root.left = TreeNode::new(1);
-        raw_root.right = TreeNode::new(3);
-        tree.root = root;
-        assert_eq!(tree.validate_bst(), true);
+        let mut root = TreeNode::<u32>::new_node(2);
+        root.set_left(TreeNode::new_node(1));
+        root.set_right(TreeNode::new_node(3));
+        let t = BinarySearchTree::<u32>::new().with_root(root).create();
+        assert_eq!(t.validate_bst(), true);
     }
+
+    // #[test]
+    // fn simple_invalid_tree() {
+    //     let mut root = TreeNode::<u32>::new_node(2);
+    //     root.set_left(TreeNode::new_node(3));
+    //     root.set_right(TreeNode::new_node(3));
+    //     let t = BinarySearchTree::<u32>::new().with_root(root).create();
+    //     assert_eq!(t.validate_bst(), true);
+    // }
 }
