@@ -26,14 +26,8 @@ impl<T> Node<T> {
         })))
     }
 
-    // Using the builder pattern to allow for optional arguments.
-    pub fn with_parent(mut self, parent: Node<T>) -> Self {
-        self.parent = Some(Rc::new(RefCell::new(parent)));
-        self
-    }
-
-    pub fn create(self) -> Self {
-        self
+    fn set_parent(&mut self, parent: Tree<T>) {
+        self.parent = parent;
     }
 
     pub fn new_node(data: T) -> Node<T> {
@@ -44,16 +38,6 @@ impl<T> Node<T> {
             parent: None,
         }
     }
-
-    // pub fn set_left(&mut self, mut node: Node<T>) {
-    //     node.parent = self.clone();
-    //     self.left = Some(Box::new(node));
-    // }
-
-    // pub fn set_right(&mut self, node: Node<T>) {
-    //     node.parent = self;
-    //     self.right = Some(Box::new(node));
-    // }
 }
 
 pub struct BinarySearchTree<T> {
@@ -72,16 +56,6 @@ where
         }
     }
 
-    // // Using the builder pattern to allow for optional arguments.
-    // pub fn with_root(mut self, root: Node<T>) -> Self {
-    //     self.root = Some(Box::new(root));
-    //     self
-    // }
-
-    // pub fn create(self) -> Self {
-    //     self
-    // }
-
     pub fn add(&mut self, data: T) {
         self.length += 1;
         let root = mem::replace(&mut self.root, None);
@@ -89,15 +63,22 @@ where
     }
 
     fn add_rec(&mut self, node: Tree<T>, data: T) -> Tree<T> {
-        println!("visiting node: {:?}, with data: {:?}", node, data);
         match node {
             Some(n) => {
                 {
                     let mut n_mut = n.borrow_mut();
                     if data <= n_mut.data {
-                        n_mut.left = self.add_rec(n_mut.left.clone(), data);
+                        let new_child = self.add_rec(n_mut.left.clone(), data);
+                        if let Some(child) = new_child.clone() {
+                            child.borrow_mut().set_parent(Some(n.clone()));
+                        }
+                        n_mut.left = new_child;
                     } else {
-                        n_mut.right = self.add_rec(n_mut.right.clone(), data);
+                        let new_child = self.add_rec(n_mut.right.clone(), data);
+                        if let Some(child) = new_child.clone() {
+                            child.borrow_mut().set_parent(Some(n.clone()));
+                        }
+                        n_mut.right = new_child;
                     }
                 }
                 Some(n)
@@ -113,12 +94,13 @@ where
     fn find_r(&self, node: &Tree<T>, data: T) -> Option<T> {
         match node {
             Some(n) => {
-                if n.clone().borrow().data == data {
-                    Some(n.borrow().data.clone())
-                } else if data < n.borrow().data {
-                    self.find_r(&n.clone().borrow().left, data)
+                let n_borrowed = n.borrow();
+                if n_borrowed.data == data {
+                    Some(n_borrowed.data.clone())
+                } else if data < n_borrowed.data {
+                    self.find_r(&n_borrowed.left, data)
                 } else {
-                    self.find_r(&n.clone().borrow().right, data)
+                    self.find_r(&n_borrowed.right, data)
                 }
             }
             _ => None,
@@ -131,10 +113,10 @@ where
     }
 
     fn walk_in_order(&self, node: &Tree<T>, height: usize) -> usize {
-        println!("visiting node: {:?}", node);
         if let Some(n) = node {
-            let l_height = self.walk_in_order(&n.clone().borrow().left, height + 1);
-            let r_height = self.walk_in_order(&n.clone().borrow().right, height + 1);
+            let n_borrowed = n.borrow();
+            let l_height = self.walk_in_order(&n_borrowed.left, height + 1);
+            let r_height = self.walk_in_order(&n_borrowed.right, height + 1);
             std::cmp::max(l_height, r_height)
         } else {
             height

@@ -6,4 +6,4 @@ mod binary_search_tree;
 mod binary_search_tree_refcell;
 pub use stack::Stack;
 pub use binary_search_tree::{BinarySearchTree, Tree, Node as TreeNode};
-pub use binary_search_tree_refcell::{BinarySearchTree as RCBinarySearchTree, Node as RCTreeNode};
+pub use binary_search_tree_refcell::{BinarySearchTree as RCBinarySearchTree, Node as RCTreeNode, Tree as RCTree};
