@@ -7,6 +7,7 @@
 // - Is it okay to use the node's value, instead of the node itself? Seems like a better abstraction...
 
 use cracking::{RCBinarySearchTree as BinarySearchTree, RCTree as Tree};
+use std::rc::Rc;
 
 trait FindSuccessor<T> {
     fn find_successor(&self, data: T) -> Option<T>;
@@ -25,17 +26,25 @@ where
         if node.is_none() {
             return None;
         }
+        let n = node.unwrap();
 
-        let lowest_right =
-            self._find_lowest_value(&node.clone().unwrap().borrow_mut().right.clone());
+        let lowest_right = self._find_lowest_value(&n.borrow_mut().right.clone());
         if lowest_right.is_some() {
             lowest_right
         } else {
-            if let Some(p) = &node.unwrap().borrow().parent {
-                Some(p.borrow().data.clone())
-            } else {
-                None
+            if let Some(p) = &n.borrow().parent {
+                // Check whether this node is the left or right child of the parent.
+                let parent = p.borrow().clone();
+                if let Some(parent_left_child) = parent.left {
+                    if Rc::ptr_eq(&parent_left_child, &n) {
+                        // if our node is the left child, and has no
+                        // right child, then the parent is the "next"
+                        // node:
+                        return Some(p.borrow().data.clone());
+                    }
+                }
             }
+            None
         }
     }
 
@@ -106,11 +115,49 @@ mod tests {
     }
 
     #[test]
-    fn find_successor() {
+    fn find_successor_simple() {
         let mut t = BinarySearchTree::<u32>::new();
         t.add(2);
         t.add(1);
         t.add(3);
         assert_eq!(t.find_successor(2), Some(3));
+    }
+
+    #[test]
+    fn find_successor_unbalanced() {
+        let mut t = BinarySearchTree::<u32>::new();
+        t.add(1);
+        t.add(2);
+        t.add(3);
+        t.add(4);
+        t.add(5);
+        t.add(6);
+        assert_eq!(t.find_successor(5), Some(6));
+    }
+
+    #[test]
+    fn find_successor_of_left_child() {
+        let mut t = BinarySearchTree::<u32>::new();
+        t.add(2);
+        t.add(1);
+        t.add(3);
+        assert_eq!(t.find_successor(1), Some(2));
+    }
+
+    #[test]
+    fn find_successor_of_right_child() {
+        let mut t = BinarySearchTree::<u32>::new();
+        t.add(2);
+        t.add(1);
+        t.add(3);
+        assert_eq!(t.find_successor(3), None);
+    }
+
+    #[test]
+    fn find_successor_of_right_child_with_left_null() {
+        let mut t = BinarySearchTree::<u32>::new();
+        t.add(2);
+        t.add(3);
+        assert_eq!(t.find_successor(3), None);
     }
 }
