@@ -32,8 +32,8 @@ where
 
         if let Some(n) = node {
             // check whether the left subtree is valid:
-            if let Some(mn) = min.clone() {
-                if n.data <= mn {
+            if let Some(minimum) = min.clone() {
+                if n.data <= minimum {
                     return false;
                 }
             }
@@ -42,8 +42,8 @@ where
             }
 
             // check whether the right subtree is valid:
-            if let Some(mx) = max.clone() {
-                if n.data > mx {
+            if let Some(maximum) = max.clone() {
+                if n.data > maximum {
                     return false;
                 }
             }
