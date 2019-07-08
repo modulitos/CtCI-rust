@@ -54,20 +54,16 @@ fn min_index(weights: &Vec<TentativeWeight>, nodes: &Vec<usize>) -> usize {
 
 // https://medium.com/@jreem/advanced-rust-using-traits-for-argument-overloading-c6a6c8ba2e17
 trait IntoEdges {
-    // type Edges: Vec<Edge>;
-
     fn into_edges(self) -> Vec<Edge>;
 }
 
 pub trait IntoNodes {
-    // type Edges: Vec<Edge>;
-
     fn into_nodes(self) -> Vec<KeyType>;
 }
 
 impl IntoNodes for Vec<char> {
     fn into_nodes(self) -> Vec<KeyType> {
-        self.iter().map(|c| c.clone() as KeyType).collect()
+        self.iter().map(|c| KeyType::from(u32::from(c.clone()))).collect()
     }
 }
 impl IntoNodes for Vec<u64> {
