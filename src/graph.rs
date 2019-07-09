@@ -53,8 +53,25 @@ fn min_index(weights: &Vec<TentativeWeight>, nodes: &Vec<usize>) -> usize {
 }
 
 // https://medium.com/@jreem/advanced-rust-using-traits-for-argument-overloading-c6a6c8ba2e17
-trait IntoEdges {
-    fn into_edges(self) -> Vec<Edge>;
+pub trait IntoEdges {
+    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge>;
+}
+
+impl IntoEdges for Vec<(u32, KeyType)> {
+    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge> {
+        self.into_iter()
+            .filter_map(|e| {
+                if let Some(to) = nodes.iter().position(|n| n == &e.1) {
+                    Some(Edge {
+                        weight: e.0,
+                        node: to,
+                    })
+                } else {
+                    panic!("Node does not exist");
+                }
+            })
+            .collect()
+    }
 }
 
 pub trait IntoNodes {
@@ -85,9 +102,6 @@ impl Graph {
         }
     }
 
-    fn get_node_index(&self, node: KeyType) -> Option<usize> {
-        self.nodes.iter().position(|n| n == &node)
-    }
 
     pub fn edges(&self) -> u64 {
         self.adjacency_list
@@ -99,7 +113,6 @@ impl Graph {
         self.nodes.len()
     }
 
-    // pub fn set_nodes(&mut self, nodes: Vec<KeyType>) {
     pub fn set_nodes<I>(&mut self, nodes: I)
     where
         I: IntoNodes,
@@ -108,20 +121,8 @@ impl Graph {
         self.adjacency_list = vec![vec![]; self.nodes.len()]
     }
 
-    pub fn set_edges(&mut self, from: KeyType, edges: Vec<(u32, KeyType)>) {
-        let edges: Vec<Edge> = edges
-            .into_iter()
-            .filter_map(|e| {
-                if let Some(to) = self.get_node_index(e.1) {
-                    Some(Edge {
-                        weight: e.0,
-                        node: to,
-                    })
-                } else {
-                    panic!("Node does not exist");
-                }
-            })
-            .collect();
+    pub fn set_edges<I>(&mut self, from: KeyType, edges: I) where I: IntoEdges {
+        let edges: Vec<Edge> = edges.into_edges(&self.nodes);
         match self.nodes.iter().position(|n| n == &from) {
             Some(i) => self.adjacency_list[i] = edges,
             None => {
