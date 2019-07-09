@@ -1,6 +1,5 @@
 use std::cmp::{Ord, Ordering};
-// use std::collections::{BTreeSet, BinaryHeap, HashMap, HashSet};
-use std::iter::FromIterator;
+use std::convert::TryFrom;
 
 // largely inspired by:
 // https://github.com/PacktPublishing/Hands-On-Data-Structures-and-Algorithms-with-Rust/blob/e79494a07c8d771e0d357ed05eb6d7ddb58a3bf8/Chapter05/src/graph.rs
@@ -53,78 +52,41 @@ fn min_index(weights: &Vec<TentativeWeight>, nodes: &Vec<usize>) -> usize {
 }
 
 // https://medium.com/@jreem/advanced-rust-using-traits-for-argument-overloading-c6a6c8ba2e17
-pub trait IntoEdges {
-    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge>;
+pub trait IntoEdge {
+    fn into_edge(self) -> Edge;
 }
 
-impl IntoEdges for Vec<(u32, KeyType)> {
-    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge> {
-        self.into_iter()
-            .filter_map(|e| {
-                if let Some(to) = nodes.iter().position(|n| n == &e.1) {
-                    Some(Edge {
-                        weight: e.0,
-                        node: to,
-                    })
-                } else {
-                    panic!("Node does not exist");
-                }
-            })
-            .collect()
+impl IntoEdge for (u32, KeyType) {
+    fn into_edge(self) -> Edge {
+        Edge {
+            weight: self.0,
+            node: usize::try_from(self.1).unwrap(),
+        }
+    }
+}
+impl IntoEdge for (u32, char) {
+    fn into_edge(self) -> Edge {
+        Edge {
+            weight: self.0,
+            node: usize::try_from(u32::from(self.1)).unwrap(),
+        }
+    }
+}
+impl IntoEdge for char {
+    fn into_edge(self) -> Edge {
+        Edge {
+            weight: 0,
+            node: usize::try_from(u32::from(self)).unwrap(),
+        }
     }
 }
 
-impl IntoEdges for Vec<(u32, char)> {
-    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge> {
-        self.into_iter()
-            .filter_map(|e| {
-                if let Some(to) = nodes
-                    .iter()
-                    .position(|n| n == &KeyType::from(u32::from(e.1)))
-                {
-                    Some(Edge {
-                        weight: e.0,
-                        node: to,
-                    })
-                } else {
-                    panic!("Node does not exist");
-                }
-            })
-            .collect()
-    }
-}
-
-impl IntoEdges for Vec<char> {
-    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge> {
-        self.into_iter()
-            .filter_map(|c| {
-                if let Some(to) = nodes.iter().position(|n| n == &KeyType::from(u32::from(c))) {
-                    Some(Edge {
-                        weight: 0,
-                        node: to,
-                    })
-                } else {
-                    panic!("Node does not exist");
-                }
-            })
-            .collect()
-    }
-}
-
-impl IntoEdges for Vec<(KeyType)> {
-    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge> {
-        self.into_iter()
-            .filter_map(|e| {
-                if let Some(to) = nodes.iter().position(|n| n == &e) {
-                    Some(Edge {
-                        weight: 0,
-                        node: to,
-                    })
-                } else {
-                    panic!("Node does not exist");
-                }
-            })
-            .collect()
+impl IntoEdge for KeyType {
+    fn into_edge(self) -> Edge {
+        Edge {
+            weight: 0,
+            node: usize::try_from(self).unwrap(),
+        }
     }
 }
 
@@ -140,6 +102,16 @@ impl IntoNode for KeyType {
 impl IntoNode for char {
     fn into_node(self) -> KeyType {
         KeyType::from(u32::from(self))
+    }
+}
+impl IntoNode for (u32, u64) {
+    fn into_node(self) -> KeyType {
+        self.1
+    }
+}
+impl IntoNode for (u32, char) {
+    fn into_node(self) -> KeyType {
+        KeyType::from(u32::from(self.1))
     }
 }
 
@@ -191,9 +163,21 @@ impl Graph {
         self.adjacency_list = vec![vec![]; self.nodes.len()]
     }
 
-    pub fn set_edges(&mut self, from: impl IntoNode, edges: impl IntoEdges) {
+    pub fn set_edges<T>(&mut self, from: impl IntoNode, edges: Vec<T>)
+    where
+        T: IntoEdge + IntoNode + std::clone::Clone,
+    {
         let from = from.into_node();
-        let edges: Vec<Edge> = edges.into_edges(&self.nodes);
+        let edges: Vec<Edge> = edges
+            .into_iter()
+            .filter_map(|e| {
+                if let Some(_) = self.nodes.iter().position(|n| n == &e.clone().into_node()) {
+                    Some(e.into_edge())
+                } else {
+                    panic!("Node does not exist");
+                }
+            })
+            .collect();
         match self.nodes.iter().position(|n| n == &from) {
             Some(i) => self.adjacency_list[i] = edges,
             None => {
