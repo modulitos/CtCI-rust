@@ -52,41 +52,54 @@ fn min_index(weights: &Vec<TentativeWeight>, nodes: &Vec<usize>) -> usize {
 }
 
 // https://medium.com/@jreem/advanced-rust-using-traits-for-argument-overloading-c6a6c8ba2e17
-pub trait IntoEdge {
+pub trait IntoEdgeAndNode {
     fn into_edge(self) -> Edge;
+    fn into_node(self) -> KeyType;
 }
 
-impl IntoEdge for (u32, KeyType) {
+impl IntoEdgeAndNode for (u32, KeyType) {
     fn into_edge(self) -> Edge {
         Edge {
             weight: self.0,
             node: usize::try_from(self.1).unwrap(),
         }
     }
+    fn into_node(self) -> KeyType {
+        self.1
+    }
 }
-impl IntoEdge for (u32, char) {
+impl IntoEdgeAndNode for (u32, char) {
     fn into_edge(self) -> Edge {
         Edge {
             weight: self.0,
             node: usize::try_from(u32::from(self.1)).unwrap(),
         }
     }
+    fn into_node(self) -> KeyType {
+        KeyType::from(u32::from(self.1))
+    }
 }
-impl IntoEdge for char {
+impl IntoEdgeAndNode for char {
     fn into_edge(self) -> Edge {
         Edge {
             weight: 0,
             node: usize::try_from(u32::from(self)).unwrap(),
         }
     }
+    fn into_node(self) -> KeyType {
+        KeyType::from(u32::from(self))
+    }
 }
 
-impl IntoEdge for KeyType {
+impl IntoEdgeAndNode for KeyType {
     fn into_edge(self) -> Edge {
         Edge {
             weight: 0,
             node: usize::try_from(self).unwrap(),
         }
+    }
+    fn into_node(self) -> KeyType {
+        self
     }
 }
 
@@ -102,16 +115,6 @@ impl IntoNode for KeyType {
 impl IntoNode for char {
     fn into_node(self) -> KeyType {
         KeyType::from(u32::from(self))
-    }
-}
-impl IntoNode for (u32, u64) {
-    fn into_node(self) -> KeyType {
-        self.1
-    }
-}
-impl IntoNode for (u32, char) {
-    fn into_node(self) -> KeyType {
-        KeyType::from(u32::from(self.1))
     }
 }
 
@@ -165,7 +168,7 @@ impl Graph {
 
     pub fn set_edges<T>(&mut self, from: impl IntoNode, edges: Vec<T>)
     where
-        T: IntoEdge + IntoNode + std::clone::Clone + std::marker::Copy,
+        T: IntoEdgeAndNode + std::clone::Clone + std::marker::Copy,
     {
         let from = from.into_node();
         let edges: Vec<Edge> = edges
