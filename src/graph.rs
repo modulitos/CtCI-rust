@@ -5,7 +5,7 @@ use std::iter::FromIterator;
 // largely inspired by:
 // https://github.com/PacktPublishing/Hands-On-Data-Structures-and-Algorithms-with-Rust/blob/e79494a07c8d771e0d357ed05eb6d7ddb58a3bf8/Chapter05/src/graph.rs
 
-type KeyType = u64;
+pub type KeyType = u64;
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 enum TentativeWeight {
@@ -35,7 +35,7 @@ impl PartialOrd for TentativeWeight {
 }
 
 #[derive(Clone, Debug)]
-struct Edge {
+pub struct Edge {
     weight: u32,
     node: usize,
 }
@@ -74,6 +74,40 @@ impl IntoEdges for Vec<(u32, KeyType)> {
     }
 }
 
+impl IntoEdges for Vec<(u32, char)> {
+    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge> {
+        self.into_iter()
+            .filter_map(|e| {
+                if let Some(to) = nodes.iter().position(|n| n == &KeyType::from(u32::from(e.1))) {
+                    Some(Edge {
+                        weight: e.0,
+                        node: to,
+                    })
+                } else {
+                    panic!("Node does not exist");
+                }
+            })
+            .collect()
+    }
+}
+
+
+pub trait IntoNode {
+    fn into_node(self) -> KeyType;
+}
+impl IntoNode for KeyType {
+    fn into_node(self) -> KeyType {
+        self
+    }
+}
+
+impl IntoNode for char {
+    fn into_node(self) -> KeyType {
+        KeyType::from(u32::from(self))
+    }
+}
+
+
 pub trait IntoNodes {
     fn into_nodes(self) -> Vec<KeyType>;
 }
@@ -102,7 +136,6 @@ impl Graph {
         }
     }
 
-
     pub fn edges(&self) -> u64 {
         self.adjacency_list
             .iter()
@@ -121,7 +154,8 @@ impl Graph {
         self.adjacency_list = vec![vec![]; self.nodes.len()]
     }
 
-    pub fn set_edges<I>(&mut self, from: KeyType, edges: I) where I: IntoEdges {
+    pub fn set_edges(&mut self, from: impl IntoNode, edges: impl IntoEdges) {
+        let from = from.into_node();
         let edges: Vec<Edge> = edges.into_edges(&self.nodes);
         match self.nodes.iter().position(|n| n == &from) {
             Some(i) => self.adjacency_list[i] = edges,
@@ -177,13 +211,13 @@ mod tests {
         assert_eq!(g.edges(), 3);
     }
 
-    // #[test]
-    // fn insert_edges_as_char() {
-    //     let mut g = Graph::new();
-    //     g.set_nodes(vec!['a', 'b', 'c']);
-    //     g.set_edges('a', vec![(1, 'a'), (2, 'b'), (3, 'c')]);
-    //     g.set_edges('b', vec![(7, 'a')]);
-    //     assert_eq!(g.nodes(), 3);
-    //     assert_eq!(g.edges(), 4);
-    // }
+    #[test]
+    fn insert_edges_as_char() {
+        let mut g = Graph::new();
+        g.set_nodes(vec!['a', 'b', 'c']);
+        g.set_edges('a', vec![(1, 'a'), (2, 'b'), (3, 'c')]);
+        g.set_edges('b', vec![(7, 'a')]);
+        assert_eq!(g.nodes(), 3);
+        assert_eq!(g.edges(), 4);
+    }
 }
