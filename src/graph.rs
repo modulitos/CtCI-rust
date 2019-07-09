@@ -8,38 +8,12 @@ use std::iter::FromIterator;
 
 pub type KeyType = u64;
 
-#[derive(Eq, PartialEq, Clone, Debug)]
-enum TentativeWeight {
-    Infinite,
-    Number(u32),
-}
-
-impl Ord for TentativeWeight {
-    fn cmp(&self, other: &TentativeWeight) -> Ordering {
-        match other {
-            TentativeWeight::Infinite => match self {
-                TentativeWeight::Infinite => Ordering::Equal,
-                _ => Ordering::Less,
-            },
-            TentativeWeight::Number(o) => match self {
-                TentativeWeight::Infinite => Ordering::Greater,
-                TentativeWeight::Number(s) => s.cmp(o),
-            },
-        }
-    }
-}
-
-impl PartialOrd for TentativeWeight {
-    fn partial_cmp(&self, other: &TentativeWeight) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 #[derive(Clone, Debug, Hash)]
 pub struct Edge {
-    weight: u32,
-    node: usize,
+    pub weight: u32,
+    pub node: usize,
 }
+
 impl Edge {
     pub fn new(edge: impl IntoEdgeAndNode) -> Self {
         edge.into_edge()
@@ -53,18 +27,6 @@ impl PartialEq for Edge {
 }
 
 impl Eq for Edge {}
-
-fn min_index(weights: &Vec<TentativeWeight>, nodes: &Vec<usize>) -> usize {
-    let mut min_weight = (weights[0].clone(), 0);
-    for node in nodes.iter() {
-        if let Some(n) = weights.get(*node) {
-            if n < &min_weight.0 {
-                min_weight = ((&weights[*node]).clone(), node.clone())
-            }
-        }
-    }
-    return min_weight.1;
-}
 
 // https://medium.com/@jreem/advanced-rust-using-traits-for-argument-overloading-c6a6c8ba2e17
 pub trait IntoEdgeAndNode {
@@ -135,7 +97,7 @@ impl IntoNode for char {
 
 pub struct Graph {
     adjacency_list: Vec<Vec<Edge>>,
-    nodes: Vec<KeyType>,
+    pub nodes: Vec<KeyType>,
 }
 
 impl Graph {
@@ -156,13 +118,12 @@ impl Graph {
         self.nodes.len()
     }
 
-    pub fn get_edges_for_node(&self, node: impl IntoNode) -> Option<HashSet<Edge>> {
+    pub fn get_outgoing_edges_for_node(&self, node: impl IntoNode) -> HashSet<Edge> {
         let node = node.into_node();
-        match self.nodes.iter().position(|n| n == &node) {
-            Some(i) => Some(HashSet::<Edge>::from_iter(
-                self.adjacency_list[i].iter().cloned(),
-            )),
-            None => None,
+        if let Some(i) = self.nodes.iter().position(|n| n == &node) {
+            HashSet::<Edge>::from_iter(self.adjacency_list[i].iter().cloned())
+        } else {
+            panic!("invalid node!")
         }
     }
 
@@ -281,23 +242,27 @@ mod tests {
     }
 
     #[test]
-    fn get_edges_for_node() {
+    fn get_outgoing_edges_for_node() {
         let mut g = Graph::new();
         g.set_nodes(vec!['a', 'b', 'c']);
         g.set_edges('a', vec!['a', 'b', 'c']);
         g.set_edges('b', vec!['a']);
         assert_eq!(
-            g.get_edges_for_node('b').unwrap(),
+            g.get_outgoing_edges_for_node('b'),
             HashSet::<Edge>::from_iter(vec![Edge::new('a')].into_iter())
         );
         assert_eq!(
-            g.get_edges_for_node('a').unwrap(),
+            g.get_outgoing_edges_for_node('a'),
             HashSet::<Edge>::from_iter(
                 vec![Edge::new('a'), Edge::new('b'), Edge::new('c')].into_iter()
             )
         );
+        assert_eq!(
+            g.get_outgoing_edges_for_node('c'),
+            HashSet::<Edge>::from_iter(vec![].into_iter())
+        );
         assert_ne!(
-            g.get_edges_for_node('b').unwrap(),
+            g.get_outgoing_edges_for_node('b'),
             HashSet::<Edge>::from_iter(
                 vec![Edge::new('a'), Edge::new('b'), Edge::new('c')].into_iter()
             )
