@@ -118,23 +118,6 @@ impl IntoNode for char {
     }
 }
 
-pub trait IntoNodes {
-    fn into_nodes(self) -> Vec<KeyType>;
-}
-
-impl IntoNodes for Vec<char> {
-    fn into_nodes(self) -> Vec<KeyType> {
-        self.iter()
-            .map(|c| KeyType::from(u32::from(c.clone())))
-            .collect()
-    }
-}
-impl IntoNodes for Vec<u64> {
-    fn into_nodes(self) -> Vec<KeyType> {
-        self
-    }
-}
-
 pub struct Graph {
     adjacency_list: Vec<Vec<Edge>>,
     nodes: Vec<KeyType>,
@@ -158,11 +141,9 @@ impl Graph {
         self.nodes.len()
     }
 
-    pub fn set_nodes<I>(&mut self, nodes: I)
-    where
-        I: IntoNodes,
+    pub fn set_nodes(&mut self, nodes: Vec<impl IntoNode>)
     {
-        self.nodes = nodes.into_nodes();
+        self.nodes = nodes.into_iter().map(|n| n.into_node()).collect();
         self.adjacency_list = vec![vec![]; self.nodes.len()]
     }
 
@@ -263,5 +244,15 @@ mod tests {
         g.set_edges('b', vec!['a']);
         assert_eq!(g.nodes(), 3);
         assert_eq!(g.edges(), 4);
+    }
+
+    #[test]
+    fn convert_char_to_u64_and_back() {
+        let a = 'a';
+        let mut u = KeyType::from(u32::from(a));
+        assert_eq!(char::from(u8::try_from(u).unwrap()), 'a');
+        let x = 'x';
+        u = KeyType::from(u32::from(x));
+        assert_eq!(char::from(u8::try_from(u).unwrap()), 'x');
     }
 }
