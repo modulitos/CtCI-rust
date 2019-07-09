@@ -118,8 +118,7 @@ impl Graph {
                         node: to,
                     })
                 } else {
-                    println!("node not available! {:?}", e.1);
-                    None
+                    panic!("Node does not exist");
                 }
             })
             .collect();
@@ -165,4 +164,25 @@ mod tests {
         assert_eq!(g.nodes(), 3);
         assert_eq!(g.edges(), 4);
     }
+
+    #[test]
+    #[should_panic(expected = "Node does not exist")]
+    fn insert_edges_panic() {
+        let mut g = Graph::new();
+        g.set_nodes(vec![1, 2, 3]);
+        g.set_edges(1, vec![(0, 1), (0, 2), (0, 3)]);
+        g.set_edges(2, vec![(0, 5)]);
+        assert_eq!(g.nodes(), 3);
+        assert_eq!(g.edges(), 3);
+    }
+
+    // #[test]
+    // fn insert_edges_as_char() {
+    //     let mut g = Graph::new();
+    //     g.set_nodes(vec!['a', 'b', 'c']);
+    //     g.set_edges('a', vec![(1, 'a'), (2, 'b'), (3, 'c')]);
+    //     g.set_edges('b', vec![(7, 'a')]);
+    //     assert_eq!(g.nodes(), 3);
+    //     assert_eq!(g.edges(), 4);
+    // }
 }
