@@ -1,5 +1,7 @@
 use std::cmp::{Ord, Ordering};
+use std::collections::HashSet;
 use std::convert::TryFrom;
+use std::iter::FromIterator;
 
 // largely inspired by:
 // https://github.com/PacktPublishing/Hands-On-Data-Structures-and-Algorithms-with-Rust/blob/e79494a07c8d771e0d357ed05eb6d7ddb58a3bf8/Chapter05/src/graph.rs
@@ -33,11 +35,24 @@ impl PartialOrd for TentativeWeight {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct Edge {
     weight: u32,
     node: usize,
 }
+impl Edge {
+    pub fn new(edge: impl IntoEdgeAndNode) -> Self {
+        edge.into_edge()
+    }
+}
+
+impl PartialEq for Edge {
+    fn eq(&self, other: &Self) -> bool {
+        self.node == other.node && self.weight == other.weight
+    }
+}
+
+impl Eq for Edge {}
 
 fn min_index(weights: &Vec<TentativeWeight>, nodes: &Vec<usize>) -> usize {
     let mut min_weight = (weights[0].clone(), 0);
@@ -141,8 +156,17 @@ impl Graph {
         self.nodes.len()
     }
 
-    pub fn set_nodes(&mut self, nodes: Vec<impl IntoNode>)
-    {
+    pub fn get_edges_for_node(&self, node: impl IntoNode) -> Option<HashSet<Edge>> {
+        let node = node.into_node();
+        match self.nodes.iter().position(|n| n == &node) {
+            Some(i) => Some(HashSet::<Edge>::from_iter(
+                self.adjacency_list[i].iter().cloned(),
+            )),
+            None => None,
+        }
+    }
+
+    pub fn set_nodes(&mut self, nodes: Vec<impl IntoNode>) {
         self.nodes = nodes.into_iter().map(|n| n.into_node()).collect();
         self.adjacency_list = vec![vec![]; self.nodes.len()]
     }
@@ -254,5 +278,29 @@ mod tests {
         let x = 'x';
         u = KeyType::from(u32::from(x));
         assert_eq!(char::from(u8::try_from(u).unwrap()), 'x');
+    }
+
+    #[test]
+    fn get_edges_for_node() {
+        let mut g = Graph::new();
+        g.set_nodes(vec!['a', 'b', 'c']);
+        g.set_edges('a', vec!['a', 'b', 'c']);
+        g.set_edges('b', vec!['a']);
+        assert_eq!(
+            g.get_edges_for_node('b').unwrap(),
+            HashSet::<Edge>::from_iter(vec![Edge::new('a')].into_iter())
+        );
+        assert_eq!(
+            g.get_edges_for_node('a').unwrap(),
+            HashSet::<Edge>::from_iter(
+                vec![Edge::new('a'), Edge::new('b'), Edge::new('c')].into_iter()
+            )
+        );
+        assert_ne!(
+            g.get_edges_for_node('b').unwrap(),
+            HashSet::<Edge>::from_iter(
+                vec![Edge::new('a'), Edge::new('b'), Edge::new('c')].into_iter()
+            )
+        );
     }
 }
