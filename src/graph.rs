@@ -165,13 +165,13 @@ impl Graph {
 
     pub fn set_edges<T>(&mut self, from: impl IntoNode, edges: Vec<T>)
     where
-        T: IntoEdge + IntoNode + std::clone::Clone,
+        T: IntoEdge + IntoNode + std::clone::Clone + std::marker::Copy,
     {
         let from = from.into_node();
         let edges: Vec<Edge> = edges
             .into_iter()
             .filter_map(|e| {
-                if let Some(_) = self.nodes.iter().position(|n| n == &e.clone().into_node()) {
+                if let Some(_) = self.nodes.iter().position(move |n| n == &e.into_node()) {
                     Some(e.into_edge())
                 } else {
                     panic!("Node does not exist");
