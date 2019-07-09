@@ -155,4 +155,14 @@ mod tests {
         g.set_nodes(vec!['a', 'b', 'c']);
         assert_eq!(g.nodes(), 3);
     }
+
+    #[test]
+    fn insert_edges() {
+        let mut g = Graph::new();
+        g.set_nodes(vec![1, 2, 3]);
+        g.set_edges(1, vec![(0, 1), (0, 2), (0,3)]);
+        g.set_edges(2, vec![(0,3)]);
+        assert_eq!(g.nodes(), 3);
+        assert_eq!(g.edges(), 4);
+    }
 }
