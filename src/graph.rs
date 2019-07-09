@@ -78,7 +78,10 @@ impl IntoEdges for Vec<(u32, char)> {
     fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge> {
         self.into_iter()
             .filter_map(|e| {
-                if let Some(to) = nodes.iter().position(|n| n == &KeyType::from(u32::from(e.1))) {
+                if let Some(to) = nodes
+                    .iter()
+                    .position(|n| n == &KeyType::from(u32::from(e.1)))
+                {
                     Some(Edge {
                         weight: e.0,
                         node: to,
@@ -91,6 +94,39 @@ impl IntoEdges for Vec<(u32, char)> {
     }
 }
 
+impl IntoEdges for Vec<char> {
+    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge> {
+        self.into_iter()
+            .filter_map(|c| {
+                if let Some(to) = nodes.iter().position(|n| n == &KeyType::from(u32::from(c))) {
+                    Some(Edge {
+                        weight: 0,
+                        node: to,
+                    })
+                } else {
+                    panic!("Node does not exist");
+                }
+            })
+            .collect()
+    }
+}
+
+impl IntoEdges for Vec<(KeyType)> {
+    fn into_edges(self, nodes: &Vec<KeyType>) -> Vec<Edge> {
+        self.into_iter()
+            .filter_map(|e| {
+                if let Some(to) = nodes.iter().position(|n| n == &e) {
+                    Some(Edge {
+                        weight: 0,
+                        node: to,
+                    })
+                } else {
+                    panic!("Node does not exist");
+                }
+            })
+            .collect()
+    }
+}
 
 pub trait IntoNode {
     fn into_node(self) -> KeyType;
@@ -107,14 +143,15 @@ impl IntoNode for char {
     }
 }
 
-
 pub trait IntoNodes {
     fn into_nodes(self) -> Vec<KeyType>;
 }
 
 impl IntoNodes for Vec<char> {
     fn into_nodes(self) -> Vec<KeyType> {
-        self.iter().map(|c| KeyType::from(u32::from(c.clone()))).collect()
+        self.iter()
+            .map(|c| KeyType::from(u32::from(c.clone())))
+            .collect()
     }
 }
 impl IntoNodes for Vec<u64> {
@@ -194,8 +231,8 @@ mod tests {
     fn insert_edges() {
         let mut g = Graph::new();
         g.set_nodes(vec![1, 2, 3]);
-        g.set_edges(1, vec![(0, 1), (0, 2), (0,3)]);
-        g.set_edges(2, vec![(0,3)]);
+        g.set_edges(1, vec![(0, 1), (0, 2), (0, 3)]);
+        g.set_edges(2, vec![(0, 3)]);
         assert_eq!(g.nodes(), 3);
         assert_eq!(g.edges(), 4);
     }
@@ -217,6 +254,26 @@ mod tests {
         g.set_nodes(vec!['a', 'b', 'c']);
         g.set_edges('a', vec![(1, 'a'), (2, 'b'), (3, 'c')]);
         g.set_edges('b', vec![(7, 'a')]);
+        assert_eq!(g.nodes(), 3);
+        assert_eq!(g.edges(), 4);
+    }
+
+    #[test]
+    fn insert_edges_no_weight() {
+        let mut g = Graph::new();
+        g.set_nodes(vec![1, 2, 3]);
+        g.set_edges(1, vec![1, 2, 3]);
+        g.set_edges(2, vec![3]);
+        assert_eq!(g.nodes(), 3);
+        assert_eq!(g.edges(), 4);
+    }
+
+    #[test]
+    fn insert_edges_chars_no_weight() {
+        let mut g = Graph::new();
+        g.set_nodes(vec!['a', 'b', 'c']);
+        g.set_edges('a', vec!['a', 'b', 'c']);
+        g.set_edges('b', vec!['a']);
         assert_eq!(g.nodes(), 3);
         assert_eq!(g.edges(), 4);
     }
