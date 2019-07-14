@@ -10,32 +10,64 @@
 
 // Output: f, e, a, b, d, c
 
-use cracking::{Graph, KeyType};
+use cracking::{Graph, IntoChar};
 use std::collections::HashSet;
 use std::iter::FromIterator;
-use std::convert::TryFrom;
 
 trait BuildOrder {
-    fn get_order(&self) -> Option<HashSet<char>>;
+    fn get_order(&self) -> Option<Vec<char>>;
     fn _get_outgoing_nodes_for_node(&self, node: char) -> HashSet<char>;
 }
 
 impl BuildOrder for Graph {
-    fn get_order(&self) -> Option<HashSet<char>> {
+    fn get_order(&self) -> Option<Vec<char>> {
         // Iterate each node, then check for all nodes with no deps
         // and add those nodes to our "built" list. If all of the nodes
         // that a node points to are in our built list, then that node
         // can be built as well. Continue iterating each node until
         // there are none left, or the "built" list size stops growing
         // - meaning there is no build order.
-        None
+
+        let mut built: Vec<char> = vec![];
+
+        while self.nodes() > built.len() {
+            let starting_length = built.len();
+            // get all nodes that are ready to be built:
+            let mut ready_nodes: Vec<char> = self
+                .nodes
+                .iter()
+                .filter(|node| {
+                    // filter out nodes that are already built:
+                    !built.contains(&node.into_char())
+                })
+                .filter_map(|node| {
+                    // if all of the node's deps are built, then add that
+                    // node to the built nodes:
+                    let node_deps = self._get_outgoing_nodes_for_node(node.into_char());
+                    // find a node that has all outgoing edges in our built list:
+                    if node_deps.iter().all(|dep| built.contains(dep)) {
+                        Some(node.into_char())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            // TODO: check ready_nodes.len() to return None
+            built.append(&mut ready_nodes);
+
+            // If we are stuck, and no nodes can be build, then avoid getting caught in a loop:
+            if starting_length == built.len() {
+                return None;
+            }
+        }
+        Some(built)
     }
 
     fn _get_outgoing_nodes_for_node(&self, node: char) -> HashSet<char> {
         HashSet::from_iter(
             self.get_outgoing_edges_for_node(node)
                 .into_iter()
-                .map(|edge| char::from(u8::try_from(edge.node).unwrap())), // node is stored internally as a u64
+                .map(|edge| edge.node.into_char()), // node is stored internally as a u64
         )
     }
 }
@@ -65,5 +97,14 @@ mod tests {
             g._get_outgoing_nodes_for_node('b'),
             HashSet::from_iter(vec!['a', 'b', 'c'].into_iter())
         );
+    }
+
+    #[test]
+    fn build_order_simple() {
+        let mut g = Graph::new();
+        g.set_nodes(vec!['a', 'b', 'c']);
+        g.set_edges('a', vec!['b']);
+        g.set_edges('b', vec!['c']);
+        assert_eq!(g.get_order(), Some(vec!['c', 'b', 'a']))
     }
 }

@@ -95,6 +95,20 @@ impl IntoNode for char {
     }
 }
 
+pub trait IntoChar {
+    fn into_char(self) -> char;
+}
+impl IntoChar for KeyType {
+    fn into_char(self) -> char {
+        char::from(u8::try_from(self).unwrap())
+    }
+}
+impl IntoChar for usize {
+    fn into_char(self) -> char {
+        char::from(u8::try_from(self).unwrap())
+    }
+}
+
 pub struct Graph {
     adjacency_list: Vec<Vec<Edge>>,
     pub nodes: Vec<KeyType>,

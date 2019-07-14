@@ -8,4 +8,4 @@ mod graph;
 pub use stack::Stack;
 pub use binary_search_tree::{BinarySearchTree, Tree, Node as TreeNode};
 pub use binary_search_tree_refcell::{BinarySearchTree as RCBinarySearchTree, Node as RCTreeNode, Tree as RCTree};
-pub use graph::{Graph, KeyType};
+pub use graph::{Graph, KeyType, Edge, IntoChar};
