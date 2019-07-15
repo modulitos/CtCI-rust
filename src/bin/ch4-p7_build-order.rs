@@ -10,6 +10,9 @@
 
 // Output: f, e, a, b, d, c
 
+// clarifying questions:
+// - does the order of the deps matter?
+
 use cracking::{Graph, IntoChar};
 use std::collections::HashSet;
 use std::iter::FromIterator;
@@ -31,7 +34,6 @@ impl BuildOrder for Graph {
         let mut built: Vec<char> = vec![];
 
         while self.nodes() > built.len() {
-            let starting_length = built.len();
             // get all nodes that are ready to be built:
             let mut ready_nodes: Vec<char> = self
                 .nodes
@@ -52,12 +54,11 @@ impl BuildOrder for Graph {
                     }
                 })
                 .collect();
-            // TODO: check ready_nodes.len() to return None
-            built.append(&mut ready_nodes);
-
-            // If we are stuck, and no nodes can be build, then avoid getting caught in a loop:
-            if starting_length == built.len() {
+            if ready_nodes.len() == 0 {
                 return None;
+            } else {
+                println!("addying ready_nodes: {:?}", ready_nodes);
+                built.append(&mut ready_nodes);
             }
         }
         Some(built)
@@ -106,5 +107,30 @@ mod tests {
         g.set_edges('a', vec!['b']);
         g.set_edges('b', vec!['c']);
         assert_eq!(g.get_order(), Some(vec!['c', 'b', 'a']))
+    }
+
+    #[test]
+    fn build_order_complex() {
+        let mut g = Graph::new();
+        g.set_nodes(vec!['a', 'b', 'c', 'd', 'e', 'f']);
+        g.set_edges('d', vec!['a']);
+        g.set_edges('b', vec!['f']);
+        g.set_edges('d', vec!['b']);
+        g.set_edges('a', vec!['f']);
+        g.set_edges('c', vec!['d']);
+        assert_eq!(g.get_order(), Some(vec!['e', 'f', 'a', 'b', 'd', 'c']))
+    }
+
+    #[test]
+    fn build_order_impossible() {
+        let mut g = Graph::new();
+        g.set_nodes(vec!['a', 'b', 'c', 'd', 'e', 'f']);
+        g.set_edges('d', vec!['a']);
+        g.set_edges('b', vec!['f']);
+        g.set_edges('d', vec!['b']);
+        g.set_edges('a', vec!['f']);
+        g.set_edges('f', vec!['d']);
+        g.set_edges('c', vec!['d']);
+        assert_eq!(g.get_order(), None)
     }
 }

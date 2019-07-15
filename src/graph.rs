@@ -110,6 +110,9 @@ impl IntoChar for usize {
 }
 
 pub struct Graph {
+    // TODO: make KeyType a generic type instead, and adjancy_list a
+    // HashMap<T, Vec<Edge>>. This will save us from having the client
+    // rely on IntoNode trait to convert KeyType to their desired type
     adjacency_list: Vec<Vec<Edge>>,
     pub nodes: Vec<KeyType>,
 }
