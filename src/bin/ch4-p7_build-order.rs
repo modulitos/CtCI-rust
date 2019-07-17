@@ -13,6 +13,10 @@
 // clarifying questions:
 // - does the order of the deps matter?
 
+// Also, this problem is called topological sort: linearly ordering
+// the vertices in a graph such that for every edge (a, b), a appears
+// before b in the linear order.
+
 use cracking::{Graph, IntoChar};
 use std::collections::HashSet;
 use std::iter::FromIterator;
