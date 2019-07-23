@@ -18,7 +18,6 @@
 
 use cracking::{BinarySearchTree, Tree};
 use std::collections::HashSet;
-use std::iter::FromIterator;
 
 fn get_all_arrays<T>(bst: BinarySearchTree<T>) -> HashSet<Vec<T>>
 where
@@ -48,6 +47,8 @@ where
         }
         results
     } else {
+        // This is our base case, and our "null" case:
+        // return a single empty array if the node doesn't existing.
         [vec![]].iter().cloned().collect()
     }
 }
@@ -178,6 +179,21 @@ mod tests {
             .cloned()
             .collect()
         );
+    }
+
+    #[test]
+    fn get_all_arrays_empty() {
+        let bst = BinarySearchTree::<u32>::new();
+
+        assert_eq!(get_all_arrays(bst), [vec![]].iter().cloned().collect());
+    }
+
+    #[test]
+    fn get_all_arrays_only_root() {
+        let mut bst = BinarySearchTree::<u32>::new();
+        bst.add(1);
+
+        assert_eq!(get_all_arrays(bst), [vec![1]].iter().cloned().collect());
     }
 
     #[test]
