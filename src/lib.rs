@@ -11,4 +11,5 @@ pub use binary_search_tree_refcell::{BinarySearchTree as RCBinarySearchTree, Nod
 pub use graph::{Graph, KeyType, Edge, IntoChar};
 mod binary_tree_refcell;
 pub use binary_tree_refcell::{BinaryTree as RCBinaryTree, Tree as RCBTree, Node as RCBTreeNode};
-// pub use binary_tree::{BinaryTree, Tree as BTree, Node as BTreeNode};
+mod binary_tree;
+pub use binary_tree::{BinaryTree, Tree as BTree, Node as BTreeNode};
