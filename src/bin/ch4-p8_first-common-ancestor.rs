@@ -3,7 +3,7 @@
 // storing additional nodes in a data structure. NOTE: This is not
 // necessarily a binary search tree.
 
-use cracking::{BTree as Tree, BTreeNode as Node, BinaryTree};
+use cracking::{RCBTree as Tree, RCBTreeNode as Node, RCBinaryTree as BinaryTree};
 use std::rc::Rc;
 
 trait FirstCommonAncestor<T> {
