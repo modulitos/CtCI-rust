@@ -35,20 +35,8 @@ impl<T> Node<T> {
 
 impl<T: PartialEq + fmt::Debug> PartialEq for Node<T> {
     fn eq(&self, other: &Self) -> bool {
-        // println!(
-        //     "comparing two nodes: self.head: {:?}, other.head: {:?}",
-        //     self, other
-        // );
         self.data == other.data && self.left == other.left && self.right == other.right
     }
-
-    // fn ne(&self, other: &Self) -> bool {
-    //     // println!(
-    //     //     "comparing two nodes: self.head: {:?}, other.head: {:?}",
-    //     //     self, other
-    //     // );
-    //     self.data != other.data && self.next == other.next
-    // }
 }
 
 struct BinaryTree<T> {
@@ -72,23 +60,13 @@ where
     }
 
     fn get_random_node(&self) -> Option<T> {
-        // fn get_random_node(&self) -> Option<&BareTree<T>> {
-        //     // &self.root.get_random_node_rec
-        //     self.get_random_node_rec(&self.root)
-        // }
-
-        // fn get_random_node_rec<'a>(&self, node: &'a Tree<T>) -> &'a Tree<T> {
         if let Some(n) = &self.root {
             let mut rng = thread_rng();
-            // get a random number between [0, self.root.length):
             let range: u32 = rng.gen_range(0, n.length);
             Some(get_node_at_index(range, &self.root))
-        // Some(self._get_node_at_index(range, &n))
-        // &Some(self)
         } else {
             None
         }
-        // node
     }
 }
 
@@ -96,9 +74,8 @@ fn get_node_at_index<'a, T>(index: u32, node: &Tree<T>) -> T
 where
     T: std::cmp::PartialOrd + std::clone::Clone + std::fmt::Debug + std::marker::Copy,
 {
-    // fn _get_node_at_index<'a>(&self, index: u32, node: &'a BareTree<T>) -> &'a BareTree<T> {
     let n = node.as_ref().unwrap();
-    if index > n.length || index < 0 {
+    if index > n.length {
         panic!(
             "_get_node_at_index: invariant violated for node: {:?} at index: {}",
             n, index
@@ -109,8 +86,8 @@ where
     }
     match (&n.left, &n.right) {
         (None, None) => n.data,
-        (Some(l), None) => get_node_at_index(index - 1, &n.left),
-        (None, Some(r)) => get_node_at_index(index - 1, &n.right),
+        (Some(_), None) => get_node_at_index(index - 1, &n.left),
+        (None, Some(_)) => get_node_at_index(index - 1, &n.right),
         (Some(l), Some(r)) => {
             if index <= l.length {
                 get_node_at_index(index - 1, &n.left)
@@ -181,4 +158,48 @@ fn test_get_node_at_index_complex() {
     assert_eq!(get_node_at_index(6, &node), 6);
     assert_eq!(get_node_at_index(7, &node), 7);
     assert_eq!(get_node_at_index(8, &node), 8);
+}
+
+#[test]
+fn test_get_random_node() {
+    let node = Node::new(
+        1,
+        Node::new(4, None, None),
+        Node::new(
+            2,
+            None,
+            Node::new(
+                3,
+                Node::new(5, Node::new(9, None, None), None),
+                Node::new(6, Node::new(7, None, None), Node::new(8, None, None)),
+            ),
+        ),
+    );
+    // NOTE: we are visually inspecting the output here to check
+    // whether the distribution is random.
+    let bt = BinaryTree::<u32>::new(node);
+    let mut v = bt.get_random_node().unwrap();
+    println!("v: {}", v);
+    assert!((1..10).contains(&v));
+    v = bt.get_random_node().unwrap();
+    println!("v: {}", v);
+    assert!((1..10).contains(&v));
+    v = bt.get_random_node().unwrap();
+    println!("v: {}", v);
+    assert!((1..10).contains(&v));
+    v = bt.get_random_node().unwrap();
+    println!("v: {}", v);
+    assert!((1..10).contains(&v));
+    v = bt.get_random_node().unwrap();
+    println!("v: {}", v);
+    assert!((1..10).contains(&v));
+    v = bt.get_random_node().unwrap();
+    println!("v: {}", v);
+    assert!((1..10).contains(&v));
+    v = bt.get_random_node().unwrap();
+    println!("v: {}", v);
+    assert!((1..10).contains(&v));
+    v = bt.get_random_node().unwrap();
+    println!("v: {}", v);
+    assert!((1..10).contains(&v));
 }
