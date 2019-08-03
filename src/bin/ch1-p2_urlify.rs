@@ -32,12 +32,22 @@ fn urlify(s: &str, length: usize) -> String {
     chars.into_iter().collect()
 }
 
+// Alternative solution with shorter syntax
+fn urlify_2(url: &str) -> String {
+    url.trim().replace(" ", "%20")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn urlify_1() {
+        assert_eq!(urlify("Mr John Smith    ", 13), "Mr%20John%20Smith");
+    }
+
+    #[test]
+    fn urlify_2() {
         assert_eq!(urlify("Mr John Smith    ", 13), "Mr%20John%20Smith");
     }
 
