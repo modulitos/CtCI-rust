@@ -8,19 +8,9 @@
 // clarifying questions:
 // space requirements? Can we use a hash table of size O(n)?
 
-use cracking::{BTree as Tree, BTreeNode as Node, BinaryTree};
-extern crate num_traits;
+use cracking::{BTree as Tree, BTreeNode as Node};
 
-pub trait PathsWithSum<T> {
-    fn find_paths(&self) -> u32;
-}
-
-impl<T> PathsWithSum<T> for BinaryTree<T> {
-    fn find_paths(&self) -> u32 {
-        0
-    }
-}
-
+// Counts paths adding to the sum, starting at the given node:
 fn count_paths_from_node<T>(node: &Tree<T>, sum: i8) -> i8
 where
     T: Copy,
@@ -40,6 +30,27 @@ where
     // the sum:
     counts += count_paths_from_node(&n.left, sum - data);
     counts += count_paths_from_node(&n.right, sum - data);
+    counts
+}
+
+fn count_paths<T>(node: &Tree<T>, sum: i8) -> i8
+where
+    T: Copy,
+    i8: std::convert::From<T>,
+{
+    if node.is_none() {
+        return 0;
+    }
+    let n = node.as_ref().unwrap();
+
+    let mut counts = 0;
+
+    // count all paths from this node:
+    counts += count_paths_from_node(node, sum);
+
+    // count all paths from the nodes below this node:
+    counts += count_paths(&n.left, sum);
+    counts += count_paths(&n.right, sum);
     counts
 }
 
@@ -64,15 +75,29 @@ fn test_count_paths_from_node_full_tree() {
 }
 
 #[test]
-fn test_brute_force_full_tree() {
-    // let node_fixture = Node::<i8>::new(
-    //     10,
-    //     Node::new(
-    //         5,
-    //         Node::new(3, Node::new(3, None, None), Node::new(-2, None, None)),
-    //         Node::new(1, None, Node::new(2, None, None)),
-    //     ),
-    //     Node::new(-3, None, Node::new(11, None, None)),
-    // );
+fn test_count_paths_simple() {
+    let node_fixture = Node::new(
+        5,
+        Node::new(
+            3,
+            Node::new(3, Node::new(2, None, None), None),
+            Node::new(-2, None, None),
+        ),
+        Node::new(1, None, Node::new(2, None, None)),
+    );
+    assert_eq!(count_paths(&node_fixture, 8), 3);
+}
 
+#[test]
+fn test_count_paths() {
+    let node_fixture = Node::<i8>::new(
+        10,
+        Node::new(
+            5,
+            Node::new(3, Node::new(3, None, None), Node::new(-2, None, None)),
+            Node::new(1, None, Node::new(2, None, None)),
+        ),
+        Node::new(-3, None, Node::new(11, None, None)),
+    );
+    assert_eq!(count_paths(&node_fixture, 8), 3);
 }
