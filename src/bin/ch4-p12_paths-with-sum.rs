@@ -87,27 +87,14 @@ where
     let data = i8::from(n.data);
     running_sum += data;
 
-    println!();
-    println!("checking node: {:?}", node);
-
     let mut counts = 0;
     if !map.contains_key(&running_sum) {
         map.insert(running_sum, 1);
     } else {
         map.insert(running_sum, map.get(&running_sum).unwrap() + 1);
     }
-    println!("map: {:?}", map);
-    println!("running sum: {}", running_sum);
-    println!(
-        "checking if map contains runningsum - sum: {}",
-        running_sum - sum
-    );
     if map.contains_key(&(running_sum - sum)) {
         // we found a match!
-        println!(
-            "we found a match! running sum: {}, sum: {}",
-            running_sum, sum
-        );
         counts += map.get(&(running_sum - sum)).unwrap()
     }
 
