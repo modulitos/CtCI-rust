@@ -88,11 +88,8 @@ where
     running_sum += data;
 
     let mut counts = 0;
-    if !map.contains_key(&running_sum) {
-        map.insert(running_sum, 1);
-    } else {
-        map.insert(running_sum, map.get(&running_sum).unwrap() + 1);
-    }
+    *map.entry(running_sum).or_insert(0) += 1;
+
     if map.contains_key(&(running_sum - sum)) {
         // we found a match!
         counts += map.get(&(running_sum - sum)).unwrap()
@@ -103,15 +100,8 @@ where
     counts += count_paths_optimized_rec(&n.right, sum, running_sum, map);
 
     // Reset the hashmap for this node:
-    if *map.get(&running_sum).unwrap() == 1 {
-        map.remove(&running_sum);
-    } else {
-        if let Some(value) = map.get(&running_sum) {
-            map.insert(running_sum, value - 1);
-        } else {
-            panic!("no value for map at sum: {}", running_sum);
-        }
-    }
+    map.entry(running_sum).and_modify(|e| *e -= 1);
+
     counts
 }
 
