@@ -72,7 +72,6 @@ fn count_paths_optimized_rec<T>(
     node: &Tree<T>,
     sum: i8,
     mut running_sum: i8,
-    // TODO: what is the difference between ownership and mutable reference here???
     map: &mut HashMap<i8, i8>,
 ) -> i8
 where
@@ -90,9 +89,8 @@ where
     let mut counts = 0;
     *map.entry(running_sum).or_insert(0) += 1;
 
-    if map.contains_key(&(running_sum - sum)) {
-        // we found a match!
-        counts += map.get(&(running_sum - sum)).unwrap()
+    if let Some(value) = map.get(&(running_sum - sum)) {
+        counts += value;
     }
 
     // count all paths from the nodes below this node:
