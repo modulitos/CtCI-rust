@@ -4,7 +4,7 @@
 // Input: 29 (or: 11101), 15 (or: 01111)
 // Output: 2
 
-fn determine_bits(mut n1: u16, mut n2: u16) -> u8 {
+fn determine_bits_basic(mut n1: u16, mut n2: u16) -> u8 {
     let mut bits = 0;
     while n1 > 0 || n2 > 0 {
         // println!("n1: {:b}", n1);
@@ -14,6 +14,20 @@ fn determine_bits(mut n1: u16, mut n2: u16) -> u8 {
         }
         n1 = n1 >> 1;
         n2 = n2 >> 1;
+    }
+    bits
+}
+
+// `c = c & (c - 1)` clears the LSB. eg:
+// 1100 & (1011)-> 1111
+// 1101 & (1100)-> 1100
+// 1000 & (0111)-> 0000
+fn determine_bits(n1: u16, n2: u16) -> u8 {
+    let mut bits = 0;
+    let mut c = n1 ^ n2;
+    while c != 0 {
+        bits += 1;
+        c = c & (c - 1);
     }
     bits
 }
