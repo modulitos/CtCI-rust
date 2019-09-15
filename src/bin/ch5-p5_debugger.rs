@@ -1,5 +1,6 @@
 // Debugger: Explain what the following code does: ( n & (n - 1)) == 0
 
+// Answer:
 // checks whether n is a 1 followed by 0 or more 0's
 // IOW, checks whether n is a power of 2!
 fn debugger(n: u8) -> bool {
