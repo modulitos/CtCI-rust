@@ -2,7 +2,11 @@
 // cards. Explain how you would subclass the data structures to
 // implement blackjack.
 
+// (Doubling down is not supported)
+use rand::prelude::*;
+use std::cmp::Ordering;
 use std::fmt::Display;
+use std::io;
 
 #[derive(Debug, Eq, PartialEq)]
 enum Suit {
@@ -90,15 +94,16 @@ impl Value {
 
 #[derive(Debug, Eq, PartialEq)]
 struct Card {
-    suit: Suit,
     value: Value,
+    suit: Suit,
 }
 
 impl Card {
     fn new(value: Value, suit: Suit) -> Self {
         Card { suit, value }
     }
-    fn get_value(&self) -> u8 {
+
+    fn get_min_value(&self) -> u8 {
         match self.value {
             Value::Two => 2,
             Value::Three => 3,
@@ -112,7 +117,7 @@ impl Card {
             Value::Jack => 10,
             Value::Queen => 10,
             Value::King => 10,
-            Value::Ace => 11,
+            Value::Ace => 1, // min value for Ace
         }
     }
 }
@@ -125,22 +130,128 @@ impl Display for Card {
 
 struct Deck {
     cards: Vec<Card>,
-    // draw_card: fn(&mut self)
 }
 
 impl Deck {
     // Returns a deck sorted from highest card to lowest card:
     fn new() -> Self {
         Deck {
-            cards: (0..52)
-                .rev()
-                .map(|n| Card::new(Value::new(n % 13), Suit::new(n % 4)))
-                .collect(),
+            cards: Deck::create_cards(),
         }
     }
 
-    fn draw_card(&mut self) -> Option<Card> {
-        self.cards.pop()
+    fn create_cards() -> Vec<Card> {
+        (0..52)
+            .rev()
+            .map(|n| Card::new(Value::new(n % 13), Suit::new(n % 4)))
+            .collect()
+    }
+
+    fn draw_card(&mut self) -> Card {
+        if let Some(card) = self.cards.pop() {
+            card
+        } else {
+            // reset the deck:
+            self.cards = Deck::create_cards();
+            self.cards.pop().unwrap()
+        }
+    }
+
+    fn shuffle(&mut self) {
+        let mut rng = rand::thread_rng();
+        self.cards.shuffle(&mut rng);
+    }
+}
+
+struct Player {
+    hand: Vec<Card>,
+}
+
+impl Player {
+    fn new() -> Self {
+        Player { hand: Vec::new() }
+    }
+
+    fn hit(&mut self, card: Card) {
+        self.hand.push(card);
+    }
+    // NOTE: if there are Aces, returns the best score possible
+    fn get_score(&self) -> u8 {
+        let num_aces = self
+            .hand
+            .iter()
+            .filter(|c| c.value == Value::Ace)
+            .collect::<Vec<&Card>>()
+            .len();
+        let mut curr = self
+            .hand
+            .iter()
+            .fold(0, |sum, card| sum + card.get_min_value());
+        for _ in 0..num_aces {
+            if curr > 11 {
+                return curr;
+            } else {
+                curr += 10;
+            }
+        }
+        curr
+    }
+
+    fn print_hand(&self) -> String {
+        self.hand
+            .iter()
+            .map(|card| format!("{}", card))
+            .collect::<Vec<String>>()
+            .join(" ")
+    }
+}
+
+fn run_game() {
+    let mut player = Player::new();
+    let mut dealer = Player::new();
+    let mut deck = Deck::new();
+    deck.shuffle();
+    loop {
+        println!("Your cards: {}", player.print_hand());
+        if player.get_score() > 21 {
+            println!("You busted!");
+            break;
+        } else if player.get_score() == 21 {
+            println!("You won!");
+            break;
+        }
+        println!("enter your next move! (h = hit, s = stay, q = quit)");
+        let mut next_move = String::new();
+        io::stdin()
+            .read_line(&mut next_move)
+            .expect("Failed to read line");
+        match next_move.trim() {
+            "h" => player.hit(deck.draw_card()),
+            "s" => {
+                println!("alright! Now let's see how the dealer did...");
+                while dealer.get_score() < 17 {
+                    dealer.hit(deck.draw_card());
+                    println!("dealers cards: {}", dealer.print_hand());
+                }
+                match player.get_score().cmp(&dealer.get_score()) {
+                    Ordering::Less => println!("You lost!"),
+                    Ordering::Greater => println!("You won!"),
+                    Ordering::Equal => println!("Tied!"),
+                }
+                break;
+            }
+            "q" => break,
+            _ => println!("invalid input! Choose again, or press 'q' to quit"),
+        }
+    }
+}
+
+fn main() {
+    println!("welcome to black jack!");
+    loop {
+        run_game();
+        println!("Thanks for playing");
+        break;
     }
 }
 
@@ -153,5 +264,45 @@ fn test_card() {
 #[test]
 fn test_deck() {
     let mut deck = Deck::new();
-    assert_eq!(deck.draw_card(), Some(Card::new(Value::Two, Suit::Club)));
+    assert_eq!(deck.draw_card(), Card::new(Value::Two, Suit::Club));
+    deck.shuffle();
+    println!("{:?}", deck.draw_card());
+    println!("{:?}", deck.draw_card());
+    println!("{:?}", deck.draw_card());
+}
+
+#[test]
+fn test_player_score() {
+    let mut player = Player::new();
+    player.hit(Card::new(Value::Six, Suit::Spade));
+    assert_eq!(player.get_score(), 6);
+    player.hit(Card::new(Value::King, Suit::Spade));
+    assert_eq!(player.get_score(), 16);
+}
+
+#[test]
+fn test_player_score_aces() {
+    let mut player = Player::new();
+    player.hit(Card::new(Value::Ace, Suit::Spade));
+    assert_eq!(player.get_score(), 11);
+    player.hit(Card::new(Value::Ace, Suit::Spade));
+    assert_eq!(player.get_score(), 12);
+    player.hit(Card::new(Value::Ace, Suit::Spade));
+    assert_eq!(player.get_score(), 13);
+    player.hit(Card::new(Value::Ace, Suit::Spade));
+    assert_eq!(player.get_score(), 14);
+    player.hit(Card::new(Value::King, Suit::Spade));
+    assert_eq!(player.get_score(), 14);
+    player.hit(Card::new(Value::King, Suit::Spade));
+    assert_eq!(player.get_score(), 24);
+
+    player = Player::new();
+    player.hit(Card::new(Value::Six, Suit::Spade));
+    assert_eq!(player.get_score(), 6);
+    player.hit(Card::new(Value::Ace, Suit::Spade));
+    assert_eq!(player.get_score(), 17);
+    player.hit(Card::new(Value::Nine, Suit::Spade));
+    assert_eq!(player.get_score(), 16);
+    player.hit(Card::new(Value::Five, Suit::Spade));
+    assert_eq!(player.get_score(), 21);
 }
