@@ -82,7 +82,6 @@ fn test_masks() {
     assert_eq!(_get_mask(0, 7), 0b1111_1111_u8);
     assert_eq!(_get_mask(0, 6), 0b1111_1110_u8);
     assert_eq!(_get_mask(1, 7), 0b0111_1111_u8);
-    // assert_eq!(_get_mask(0, 0), 0b0000_0000_u8);
 }
 
 // #[test]
