@@ -50,10 +50,13 @@ struct CallCenter {
 
 impl CallCenter {
     fn new(mut employees: Vec<Employee>) -> Self {
-        employees.sort();
+        employees.sort(); // sort from lowest to highest Rank.
         CallCenter { employees }
     }
     fn _find_available_employee_idx(&self, call: Call) -> Option<usize> {
+        // Finds the first available Employee with Rank above or equal
+        // to the Call's minimum_rank. Depens on self.employees being
+        // sorted already!
         self.employees.iter().enumerate().find_map(|(i, e)| {
             if e.rank >= call.minimum_rank && e.is_available {
                 Some(i)
@@ -226,123 +229,122 @@ fn test_call_center_single() {
     );
 }
 
-// #[test]
-// fn test_call_center_respondent() {
-//     let employees = vec![
-//         Employee {
-//             rank: Rank::Director,
-//             is_available: true,
-//             name: String::from("Diane Director"),
-//         },
-//         Employee {
-//             rank: Rank::Manager,
-//             is_available: true,
-//             name: String::from("Marty Manager"),
-//         },
-//         Employee {
-//             rank: Rank::Respondent,
-//             is_available: false,
-//             name: String::from("Joe"),
-//         },
-//         Employee {
-//             rank: Rank::Respondent,
-//             is_available: true,
-//             name: String::from("Jane"),
-//         },
-//     ];
-//     let mut call_center = CallCenter { employees };
-//     assert_eq!(
-//         call_center
-//             .dispatch_call(Call {
-//                 from: String::from("Luke"),
-//                 minimum_rank: Rank::Respondent
-//             })
-//             .unwrap()
-//             .name,
-//         String::from("Jane")
-//     );
-// }
-
-// #[test]
-// fn test_call_center_director() {
-//     let employees = vec![
-//         Employee {
-//             rank: Rank::Director,
-//             is_available: true,
-//             name: String::from("Diane Director"),
-//         },
-//         Employee {
-//             rank: Rank::Manager,
-//             is_available: true,
-//             name: String::from("Marty Manager"),
-//         },
-//         Employee {
-//             rank: Rank::Respondent,
-//             is_available: false,
-//             name: String::from("Joe"),
-//         },
-//         Employee {
-//             rank: Rank::Respondent,
-//             is_available: true,
-//             name: String::from("Jane"),
-//         },
-//     ];
-//     let mut call_center = CallCenter { employees };
-//     assert_eq!(
-//         call_center
-//             .dispatch_call(Call {
-//                 from: String::from("Obama"),
-//                 minimum_rank: Rank::Respondent
-//             })
-//             .unwrap()
-//             .name,
-//         String::from("Diane Director")
-//     );
-// }
-
-// fn test_call_center_manager() {
-//     let employees = vec![
-//         Employee {
-//             rank: Rank::Director,
-//             is_available: true,
-//             name: String::from("Diane Director"),
-//         },
-//         Employee {
-//             rank: Rank::Manager,
-//             is_available: true,
-//             name: String::from("Marty Manager"),
-//         },
-//         Employee {
-//             rank: Rank::Respondent,
-//             is_available: false,
-//             name: String::from("Joe"),
-//         },
-//         Employee {
-//             rank: Rank::Respondent,
-//             is_available: true,
-//             name: String::from("Jane"),
-//         },
-//     ];
-//     let mut call_center = CallCenter { employees };
-//     assert_eq!(
-//         call_center
-//             .dispatch_call(Call {
-//                 from: String::from("Middle Manager"),
-//                 minimum_rank: Rank::Respondent
-//             })
-//             .unwrap()
-//             .name,
-//         String::from("Marty Manager")
-//     );
-// }
-fn main() {
-    let mut call_center = CallCenter {
-        employees: vec![Employee {
+#[test]
+fn test_call_center_respondent() {
+    let employees = vec![
+        Employee {
             rank: Rank::Director,
+            is_available: true,
+            name: String::from("Diane Director"),
+        },
+        Employee {
+            rank: Rank::Manager,
+            is_available: true,
+            name: String::from("Marty Manager"),
+        },
+        Employee {
+            rank: Rank::Respondent,
             is_available: false,
-            name: String::from("Mr. Director"),
-        }],
-    };
+            name: String::from("Joe"),
+        },
+        Employee {
+            rank: Rank::Respondent,
+            is_available: true,
+            name: String::from("Jane"),
+        },
+    ];
+    let mut call_center = CallCenter::new(employees);
+    assert_eq!(
+        call_center
+            .dispatch_call(Call {
+                from: String::from("Luke"),
+                minimum_rank: Rank::Respondent
+            })
+            .unwrap()
+            .name,
+        String::from("Jane")
+    );
+}
+
+#[test]
+fn test_call_center_director() {
+    let employees = vec![
+        Employee {
+            rank: Rank::Director,
+            is_available: true,
+            name: String::from("Diane Director"),
+        },
+        Employee {
+            rank: Rank::Manager,
+            is_available: true,
+            name: String::from("Marty Manager"),
+        },
+        Employee {
+            rank: Rank::Respondent,
+            is_available: false,
+            name: String::from("Joe"),
+        },
+        Employee {
+            rank: Rank::Respondent,
+            is_available: true,
+            name: String::from("Jane"),
+        },
+    ];
+    let mut call_center = CallCenter::new(employees);
+    assert_eq!(
+        call_center
+            .dispatch_call(Call {
+                from: String::from("Obama"),
+                minimum_rank: Rank::Director
+            })
+            .unwrap()
+            .name,
+        String::from("Diane Director")
+    );
+}
+
+#[test]
+fn test_call_center_manager() {
+    let employees = vec![
+        Employee {
+            rank: Rank::Director,
+            is_available: true,
+            name: String::from("Diane Director"),
+        },
+        Employee {
+            rank: Rank::Manager,
+            is_available: true,
+            name: String::from("Marty Manager"),
+        },
+        Employee {
+            rank: Rank::Respondent,
+            is_available: false,
+            name: String::from("Joe"),
+        },
+        Employee {
+            rank: Rank::Respondent,
+            is_available: true,
+            name: String::from("Jane"),
+        },
+    ];
+    let mut call_center = CallCenter::new(employees);
+    assert_eq!(
+        call_center
+            .dispatch_call(Call {
+                from: String::from("Middle Manager"),
+                minimum_rank: Rank::Manager
+            })
+            .unwrap()
+            .name,
+        String::from("Marty Manager")
+    );
+}
+fn main() {
+    let mut call_center = CallCenter::new(vec![Employee {
+        rank: Rank::Director,
+        is_available: false,
+        name: String::from("Mr. Director"),
+    }]);
     call_center.dispatch_call(Call {
         from: String::from("Obama"),
         minimum_rank: Rank::Respondent,
