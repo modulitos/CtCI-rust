@@ -11,6 +11,9 @@
 // This solution largely inspired by:
 // https://github.com/careercup/CtCI-6th-Edition/tree/59018cfcb90292209275db1c4b3ed306d4b07d7f/Java/Ch%2007.%20Object-Oriented%20Design/Q7_04_Parking_Lot
 
+// but uses ECS instead of traditional OOP:
+// https://en.wikipedia.org/wiki/Entity_component_system
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum VehicleSize {
     Motorcycle,
