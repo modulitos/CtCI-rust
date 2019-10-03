@@ -15,9 +15,10 @@ use std::collections::HashMap;
 #[macro_use]
 extern crate derive_more;
 
-#[derive(Debug, Hash, PartialEq, Eq, AddAssign)]
+#[derive(Debug, Hash, PartialEq, Eq, AddAssign, Clone)]
 struct BookId(usize);
 
+#[derive(Clone)]
 struct Book {
     id: BookId,
     title: String,
@@ -33,16 +34,76 @@ struct User {
 }
 
 struct LibraryManager {
-    all_books: HashMap<BookId, Book>,
-    user_libraries: HashMap<UserId, Vec<Book>>,
+    books: HashMap<BookId, Book>,
+    user_libraries: HashMap<UserId, Vec<BookId>>,
 }
 
 impl LibraryManager {
     fn new() -> Self {
+        let mut books = HashMap::new();
+        books.insert(
+            BookId(0),
+            Book {
+                id: BookId(0),
+                title: String::from("Pride and Prejudice"),
+                author: String::from("Jane Austen"),
+            },
+        );
+        books.insert(
+            BookId(1),
+            Book {
+                id: BookId(1),
+                title: String::from("Free Will"),
+                author: String::from("Sam Harris"),
+            },
+        );
+        books.insert(
+            BookId(2),
+            Book {
+                id: BookId(2),
+                title: String::from("Oh the places you'll go"),
+                author: String::from("Dr. Seuss"),
+            },
+        );
+        books.insert(
+            BookId(3),
+            Book {
+                id: BookId(3),
+                title: String::from("Infinite Jest"),
+                author: String::from("David Foster Wallace"),
+            },
+        );
         LibraryManager {
-            all_books: HashMap::new(),
+            books,
             user_libraries: HashMap::new(),
         }
+    }
+
+    fn add_book(&mut self, user_id: UserId, book_id: BookId) {
+        match self.books.get(&book_id) {
+            Some(_) => {
+                if let Some(user_books) = self.user_libraries.get_mut(&user_id) {
+                    user_books.push(book_id);
+                } else {
+                    self.user_libraries.insert(user_id, vec![book_id]);
+                }
+            }
+            None => return, // invalid book_id
+        }
+    }
+
+    fn get_book(&mut self, user_id: UserId, book_id: BookId) -> Option<Book> {
+        // Check for valid book id
+        if let Some(book) = self.books.get(&book_id) {
+            // Check if the user has a book library:
+            if let Some(user_books) = self.user_libraries.get(&user_id) {
+                // Check if the book is part of the user's libarary:
+                if user_books.contains(&book_id) {
+                    return Some(book.clone());
+                }
+            }
+        }
+        None
     }
 }
 
@@ -87,7 +148,7 @@ impl UserManager {
 
 struct Display {
     current_page: Option<usize>,
-    current_book: Option<BookId>,
+    current_book: Option<Book>,
     current_user: Option<User>,
 }
 
@@ -119,51 +180,90 @@ impl OnlineBookReader {
             display: Display::new(),
         }
     }
-    fn new_user(&mut self, name: &str) -> Result<&Display, String> {
+    fn new_user(&mut self, name: &str) -> &Display {
         match self.user_manager.new_user(name) {
             Ok(user) => {
                 self.display.update_user(user.clone());
-                Ok(&self.display)
+                &self.display
             }
-            Err(message) => Err(message),
+            Err(message) => panic!(message),
         }
     }
 
-    fn login_user(&mut self, name: &str) -> Result<&Display, String> {
+    fn login_user(&mut self, name: &str) -> &Display {
         match self.user_manager.get_user(name) {
             Ok(user) => {
                 self.display.update_user(user.clone());
-                Ok(&self.display)
+                &self.display
             }
-            Err(message) => Err(message),
+            Err(message) => panic!(message),
+        }
+    }
+
+    fn add_book(&mut self, book_id: BookId) {
+        let user_id = self.display.current_user.as_ref().unwrap().id;
+        self.library_manager.add_book(user_id, book_id);
+    }
+
+    fn open_book(&mut self, book_id: BookId) -> &Display {
+        let user_id = self.display.current_user.as_ref().unwrap().id;
+        self.display.current_book = self.library_manager.get_book(user_id, book_id);
+        self.display.current_page = Some(0);
+        &self.display
+    }
+
+    fn turn_page(&mut self) -> &Display {
+        if let Some(current_page) = self.display.current_page {
+            self.display.current_page = Some(current_page + 1);
+            &self.display
+        } else {
+            panic!("can't turn page - no book is open!")
         }
     }
 }
 
 #[test]
-fn test_set_active_user() {
+fn test_users() {
     let mut reader = OnlineBookReader::new();
+    let display = reader.new_user("Jane");
     assert_eq!(
-        reader
-            .new_user("Jane")
-            .unwrap()
-            .current_user
-            .as_ref()
-            .unwrap()
-            .name,
+        display.current_user.as_ref().unwrap().name,
         String::from("Jane")
     );
+    assert_eq!(display.current_user.as_ref().unwrap().id, UserId(0));
 
-    assert!(reader.login_user("Joe").is_err());
+    let display = reader.new_user("John");
     assert_eq!(
-        reader
-            .new_user("John")
-            .unwrap()
-            .current_user
-            .as_ref()
-            .unwrap()
-            .name,
+        display.current_user.as_ref().unwrap().name,
         String::from("John")
     );
-    assert!(reader.login_user("Jane").is_ok());
+    assert_eq!(display.current_user.as_ref().unwrap().id, UserId(1));
+    reader.login_user("Jane");
+}
+
+#[test]
+fn test_books() {
+    let mut reader = OnlineBookReader::new();
+    reader.new_user("Jane");
+    reader.add_book(BookId(1));
+    assert_eq!(
+        reader
+            .open_book(BookId(1))
+            .current_book
+            .as_ref()
+            .unwrap()
+            .title,
+        String::from("Free Will")
+    );
+}
+
+#[test]
+fn test_page_turning() {
+    let mut reader = OnlineBookReader::new();
+    reader.new_user("Jane");
+    reader.add_book(BookId(1));
+    reader.open_book(BookId(1));
+    reader.turn_page();
+    reader.turn_page();
+    assert_eq!(reader.turn_page().current_page, Some(3));
 }
