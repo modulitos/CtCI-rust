@@ -3,9 +3,11 @@
 // you have a fits_with method which, when passed two puzzle edges,
 // returns true if the two edges belong together.
 
+use rand::distributions::Uniform;
+use rand::prelude::*;
 use std::collections::HashMap;
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq, Debug)]
 enum Orientation {
     TOP,
     RIGHT,
@@ -13,26 +15,52 @@ enum Orientation {
     LEFT,
 }
 
-#[derive(PartialEq, Eq)]
+impl Orientation {
+    fn rotate_clockwise(self) -> Self {
+        use Orientation::*;
+        match self {
+            TOP => RIGHT,
+            RIGHT => BOTTOM,
+            BOTTOM => LEFT,
+            LEFT => TOP,
+        }
+    }
+
+    fn rotate_counterclockwise(self) -> Self {
+        use Orientation::*;
+        match self {
+            TOP => LEFT,
+            LEFT => BOTTOM,
+            BOTTOM => RIGHT,
+            RIGHT => TOP,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Debug)]
 enum Shape {
     IN,
     OUT,
     FLAT,
 }
 
-type EdgeId = (u8, u8);
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+enum Direction {
+    HORIZONTAL,
+    VERTICAL,
+}
 
+type EdgeId = (u8, u8, Direction);
+
+#[derive(Debug)]
 struct Edge {
     id: EdgeId,
     shape: Shape,
 }
 
 impl Edge {
-    fn new(row: u8, col: u8, shape: Shape) -> Self {
-        Edge {
-            id: (row, col),
-            shape,
-        }
+    fn new(id: EdgeId, shape: Shape) -> Self {
+        Edge { id, shape }
     }
 }
 struct Piece {
@@ -42,19 +70,25 @@ struct Piece {
 impl Piece {
     fn new(row: u8, col: u8, rows: u8, cols: u8) -> Self {
         let mut edges = HashMap::new();
+        use Direction::*;
         edges.insert(
             Orientation::LEFT,
-            Edge::new(row, col, if col == 0 { Shape::FLAT } else { Shape::OUT }),
+            Edge::new(
+                (row, col, HORIZONTAL),
+                if col == 0 { Shape::FLAT } else { Shape::OUT },
+            ),
         );
         edges.insert(
             Orientation::TOP,
-            Edge::new(row, col, if row == 0 { Shape::FLAT } else { Shape::OUT }),
+            Edge::new(
+                (row, col, VERTICAL),
+                if row == 0 { Shape::FLAT } else { Shape::OUT },
+            ),
         );
         edges.insert(
             Orientation::RIGHT,
             Edge::new(
-                row,
-                col + 1,
+                (row, col + 1, HORIZONTAL),
                 if col == cols - 1 {
                     Shape::FLAT
                 } else {
@@ -65,8 +99,7 @@ impl Piece {
         edges.insert(
             Orientation::BOTTOM,
             Edge::new(
-                row + 1,
-                col,
+                (row + 1, col, VERTICAL),
                 if row == rows - 1 {
                     Shape::FLAT
                 } else {
@@ -75,6 +108,27 @@ impl Piece {
             ),
         );
         Piece { edges }
+    }
+
+    fn rotate_by(&mut self, mut i: u8) {
+        i = i % 4;
+        // rotate the piece clockwise on each iteration:
+        for _ in 0..i {
+            let new_top = self.edges.remove(&Orientation::LEFT).expect("no LEFT");
+            let new_right = self.edges.remove(&Orientation::TOP).expect("no TOP");
+            self.edges.insert(Orientation::TOP, new_top);
+            let new_bottom = self.edges.remove(&Orientation::RIGHT).expect("no RIGHTJjk");
+            self.edges.insert(Orientation::RIGHT, new_right);
+            let new_left = self.edges.remove(&Orientation::BOTTOM).expect("no BOTTOM");
+            self.edges.insert(Orientation::BOTTOM, new_bottom);
+            self.edges.insert(Orientation::LEFT, new_left);
+        }
+    }
+
+    fn get_edge(&self, orientation: Orientation) -> &Edge {
+        self.edges
+            .get(&orientation)
+            .expect("This piece is missing an edge!!!!")
     }
 
     fn is_corner(&self) -> bool {
@@ -114,7 +168,20 @@ impl Puzzle {
         Puzzle { pieces }
     }
 
-    fn shuffle(&mut self) {}
+    fn shuffle(&mut self) {
+        let mut rng = rand::thread_rng();
+        // randomly re-orient the pieces:
+        self.pieces.shuffle(&mut rng);
+
+        let between = Uniform::from(0..4);
+        let mut rng = rand::thread_rng();
+        between.sample(&mut rng);
+        self.pieces.iter_mut().for_each(|pieces_row| {
+            pieces_row
+                .iter_mut()
+                .for_each(|piece| piece.rotate_by(between.sample(&mut rng)))
+        });
+    }
 
     fn get_piece(&self, row: usize, col: usize) -> &Piece {
         &self.pieces[row][col]
@@ -136,4 +203,39 @@ fn create_puzzle() {
     assert_eq!(p.get_piece(0, 1).is_corner(), false);
     assert_eq!(p.get_piece(1, 1).is_corner(), false);
     assert_eq!(p.get_piece(1, 2).is_corner(), true);
+}
+
+#[test]
+fn test_orientation() {
+    let mut o = Orientation::LEFT;
+    assert_eq!(o, Orientation::LEFT);
+    o = o.rotate_clockwise();
+    assert_eq!(o, Orientation::TOP);
+    o = o.rotate_clockwise();
+    o = o.rotate_clockwise();
+    assert_eq!(o, Orientation::BOTTOM);
+}
+
+#[test]
+fn test_piece() {
+    use Orientation::*;
+    let mut p = Piece::new(0, 0, 3, 3);
+    let top = p.get_edge(TOP).id;
+    let right = p.get_edge(RIGHT).id;
+    let bottom = p.get_edge(BOTTOM).id;
+    let left = p.get_edge(LEFT).id;
+    assert_ne!(p.get_edge(TOP).id, left);
+    assert_ne!(p.get_edge(RIGHT).id, top);
+    assert_ne!(p.get_edge(BOTTOM).id, right);
+    assert_ne!(p.get_edge(LEFT).id, bottom);
+    p.rotate_by(1);
+    assert_eq!(p.get_edge(TOP).id, left);
+    assert_eq!(p.get_edge(RIGHT).id, top);
+    assert_eq!(p.get_edge(BOTTOM).id, right);
+    assert_eq!(p.get_edge(LEFT).id, bottom);
+    p.rotate_by(2);
+    assert_eq!(p.get_edge(BOTTOM).id, left);
+    assert_eq!(p.get_edge(LEFT).id, top);
+    assert_eq!(p.get_edge(TOP).id, right);
+    assert_eq!(p.get_edge(RIGHT).id, bottom);
 }
