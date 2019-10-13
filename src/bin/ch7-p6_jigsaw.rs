@@ -62,6 +62,10 @@ impl Edge {
     fn new(id: EdgeId, shape: Shape) -> Self {
         Edge { id, shape }
     }
+
+    fn fits_with(&self, other: &Edge) -> bool {
+        self.id == other.id
+    }
 }
 struct Piece {
     edges: HashMap<Orientation, Edge>,
@@ -130,7 +134,6 @@ impl Piece {
             .get(&orientation)
             .expect("This piece is missing an edge!!!!")
     }
-
     fn is_corner(&self) -> bool {
         let left_right_flats = self
             .edges
@@ -184,15 +187,10 @@ impl Puzzle {
     }
 
     fn get_piece(&self, row: usize, col: usize) -> &Piece {
+        // NOTE: We can optionally use the `get` method if we're not
+        // sure if 'row/col' will be in bounds, which would return an
+        // Option<&Piece>
         &self.pieces[row][col]
-        // We can optionally use the `get` method if we're not sure if 'row/col' will be in bounds:
-
-        // fn get_piece(&self, row_i: usize, col_i: usize) -> &Piece {
-        // if let Some(row) = self.pieces.get(usize::from(row_i)) {
-        //     row.get(usize::from(col_i))
-        // } else {
-        //     None
-        // }
     }
 }
 
@@ -217,7 +215,7 @@ fn test_orientation() {
 }
 
 #[test]
-fn test_piece() {
+fn test_piece_orientation() {
     use Orientation::*;
     let mut p = Piece::new(0, 0, 3, 3);
     let top = p.get_edge(TOP).id;
@@ -238,4 +236,22 @@ fn test_piece() {
     assert_eq!(p.get_edge(LEFT).id, top);
     assert_eq!(p.get_edge(TOP).id, right);
     assert_eq!(p.get_edge(RIGHT).id, bottom);
+}
+
+#[test]
+fn test_piece_fits_with() {
+    let p = Puzzle::new(2, 3);
+    use Orientation::*;
+    assert_eq!(
+        p.get_piece(0, 0)
+            .get_edge(RIGHT)
+            .fits_with(p.get_piece(0, 1).get_edge(LEFT)),
+        true
+    );
+    assert_eq!(
+        p.get_piece(0, 0)
+            .get_edge(BOTTOM)
+            .fits_with(p.get_piece(0, 1).get_edge(LEFT)),
+        false
+    );
 }
