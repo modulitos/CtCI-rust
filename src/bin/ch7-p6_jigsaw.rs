@@ -5,6 +5,7 @@
 
 use rand::distributions::Uniform;
 use rand::prelude::*;
+use std::cmp::PartialEq;
 use std::collections::HashMap;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
@@ -44,6 +45,17 @@ enum Shape {
     FLAT,
 }
 
+impl Shape {
+    fn fits_with(&self, other: &Shape) -> bool {
+        use Shape::*;
+        match self {
+            IN => other == &OUT,
+            OUT => other == &IN,
+            _ => false,
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Debug, Clone)]
 enum Direction {
     HORIZONTAL,
@@ -64,11 +76,32 @@ impl Edge {
     }
 
     fn fits_with(&self, other: &Edge) -> bool {
-        self.id == other.id
+        self.id == other.id && other.shape.fits_with(&self.shape)
     }
 }
+
+#[derive(Debug)]
 struct Piece {
     edges: HashMap<Orientation, Edge>,
+}
+
+impl PartialEq for Piece {
+    fn eq(&self, other: &Piece) -> bool {
+        self.edges
+            .iter()
+            .find(|(orientation, edge)| {
+                if let Some(other_edge) = other.edges.get(orientation) {
+                    if edge.id == other_edge.id {
+                        false
+                    } else {
+                        true
+                    }
+                } else {
+                    true
+                }
+            })
+            .is_none()
+    }
 }
 
 impl Piece {
@@ -170,14 +203,15 @@ impl Piece {
             (RIGHT, BOTTOM) => 1,
             (RIGHT, LEFT) => 2,
             (BOTTOM, TOP) => 2,
-            (BOTTOM, RIGHT) => 1,
+            (BOTTOM, RIGHT) => 3,
             (BOTTOM, BOTTOM) => 0,
-            (BOTTOM, LEFT) => 3,
+            (BOTTOM, LEFT) => 1,
         };
         self.rotate_by(i);
     }
 }
 
+#[derive(Debug, PartialEq)]
 struct Puzzle {
     pieces: Vec<Piece>,
     rows: usize,
@@ -235,7 +269,10 @@ impl Puzzle {
                         None
                     }
                 }) {
+                    // println!("first piece orientation: {:?}", orientation);
+                    // println!("first piece: {:?}", piece);
                     piece.set_edge_as_orientation(&orientation, &LEFT);
+                    // println!("rotated first piece: {:?}", piece);
                     Some(i)
                 } else {
                     None
@@ -243,8 +280,53 @@ impl Puzzle {
             })
             .expect("no top left piece!");
         self.pieces.swap(0, top_left_i);
+        // println!("");
         // iterate through self.pieces, progressively searching for
         // the next piece that matches our existing piece
+        for i in 1..self.pieces.len() {
+            // find the piece that should belong to index i:
+            let is_first_col = i % self.cols == 0;
+            let match_orientation = if is_first_col {
+                Orientation::BOTTOM
+            } else {
+                Orientation::RIGHT
+            };
+            let edge_to_match = if is_first_col {
+                self.pieces[i - self.cols].edges[&match_orientation].clone()
+            } else {
+                self.pieces[i - 1].edges[&match_orientation].clone()
+            };
+            let target_orientation = match_orientation.rotate_clockwise().rotate_clockwise();
+            // println!("edge_to_match: {:?}", edge_to_match);
+            // println!("target orientation: {:?}", target_orientation);
+            // println!("looking for piece to match index: {}", i);
+            let matching_piece_index = self.pieces[i..]
+                .iter_mut()
+                .enumerate()
+                .find_map(|(j, piece)| {
+                    // println!("testing piece at index: {}", i + j);
+                    if let Some(orientation) = piece.edges.iter().find_map(|(orientation, edge)| {
+                        if edge.fits_with(&edge_to_match) {
+                            // println!(
+                            //     "at orientation: {:?}, found matching edge: {:?}",
+                            //     orientation, edge
+                            // );
+                            Some(orientation.clone())
+                        } else {
+                            None
+                        }
+                    }) {
+                        piece.set_edge_as_orientation(&orientation, &target_orientation);
+                        // println!("matching piece found: {:?}", piece);
+                        Some(j + i)
+                    } else {
+                        None
+                    }
+                })
+                .expect("No matching piece found!!!");
+            // println!("");
+            self.pieces.swap(i, matching_piece_index);
+        }
     }
 }
 
@@ -267,6 +349,8 @@ fn test_orientation() {
     o = o.rotate_clockwise();
     o = o.rotate_clockwise();
     assert_eq!(o, BOTTOM);
+
+    // assert_eq!(RIGHT - TOP, 1);
 }
 
 #[test]
@@ -335,4 +419,24 @@ fn test_piece_fits_with() {
             .fits_with(p.get_piece(0, 0).get_edge(TOP)),
         false
     );
+}
+
+#[test]
+fn test_puzzle_solve_small() {
+    let mut p = Puzzle::new(2, 2);
+    let solved = Puzzle::new(2, 2);
+    assert_eq!(p, solved); // sanity check
+    p.shuffle();
+    p.solve();
+    assert_eq!(p, solved);
+}
+
+#[test]
+fn test_puzzle_solve_large() {
+    let mut p = Puzzle::new(3, 3);
+    let solved = Puzzle::new(3, 3);
+    assert_eq!(p, solved); // sanity check
+    p.shuffle();
+    p.solve();
+    assert_eq!(p, solved);
 }
