@@ -155,8 +155,26 @@ impl Piece {
     }
 
     fn set_edge_as_orientation(&mut self, from: &Orientation, to: &Orientation) {
-        // let i = (to - from + 4) % 4;
-        // self.rotate_by(i);
+        use Orientation::*;
+        let i = match (from, to) {
+            (LEFT, TOP) => 1,
+            (LEFT, RIGHT) => 2,
+            (LEFT, BOTTOM) => 3,
+            (LEFT, LEFT) => 0,
+            (TOP, TOP) => 0,
+            (TOP, RIGHT) => 1,
+            (TOP, BOTTOM) => 2,
+            (TOP, LEFT) => 3,
+            (RIGHT, TOP) => 3,
+            (RIGHT, RIGHT) => 0,
+            (RIGHT, BOTTOM) => 1,
+            (RIGHT, LEFT) => 2,
+            (BOTTOM, TOP) => 2,
+            (BOTTOM, RIGHT) => 1,
+            (BOTTOM, BOTTOM) => 0,
+            (BOTTOM, LEFT) => 3,
+        };
+        self.rotate_by(i);
     }
 }
 
@@ -241,13 +259,14 @@ fn create_puzzle() {
 
 #[test]
 fn test_orientation() {
-    let mut o = Orientation::LEFT;
-    assert_eq!(o, Orientation::LEFT);
+    use Orientation::*;
+    let mut o = LEFT;
+    assert_eq!(o, LEFT);
     o = o.rotate_clockwise();
-    assert_eq!(o, Orientation::TOP);
+    assert_eq!(o, TOP);
     o = o.rotate_clockwise();
     o = o.rotate_clockwise();
-    assert_eq!(o, Orientation::BOTTOM);
+    assert_eq!(o, BOTTOM);
 }
 
 #[test]
@@ -272,6 +291,20 @@ fn test_piece_orientation() {
     assert_eq!(p.get_edge(LEFT).id, top);
     assert_eq!(p.get_edge(TOP).id, right);
     assert_eq!(p.get_edge(RIGHT).id, bottom);
+}
+
+#[test]
+fn test_piece_rotation() {
+    use Orientation::*;
+    let mut p = Piece::new(0, 0, 3, 3);
+    let left = p.get_edge(LEFT).id.clone();
+    let bottom = p.get_edge(BOTTOM).id.clone();
+    p.set_edge_as_orientation(&LEFT, &RIGHT);
+    assert_eq!(left, p.get_edge(RIGHT).id);
+    assert_eq!(bottom, p.get_edge(TOP).id);
+    p.set_edge_as_orientation(&TOP, &RIGHT);
+    assert_eq!(left, p.get_edge(BOTTOM).id);
+    assert_eq!(bottom, p.get_edge(RIGHT).id);
 }
 
 #[test]
