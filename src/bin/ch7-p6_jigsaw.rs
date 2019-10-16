@@ -7,7 +7,7 @@ use rand::distributions::Uniform;
 use rand::prelude::*;
 use std::collections::HashMap;
 
-#[derive(Hash, PartialEq, Eq, Debug)]
+#[derive(Hash, PartialEq, Eq, Debug, Clone)]
 enum Orientation {
     TOP,
     RIGHT,
@@ -37,22 +37,22 @@ impl Orientation {
     }
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 enum Shape {
     IN,
     OUT,
     FLAT,
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 enum Direction {
     HORIZONTAL,
     VERTICAL,
 }
 
-type EdgeId = (u8, u8, Direction);
+type EdgeId = (usize, usize, Direction);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Edge {
     id: EdgeId,
     shape: Shape,
@@ -72,7 +72,7 @@ struct Piece {
 }
 
 impl Piece {
-    fn new(row: u8, col: u8, rows: u8, cols: u8) -> Self {
+    fn new(row: usize, col: usize, rows: usize, cols: usize) -> Self {
         let mut edges = HashMap::new();
         use Direction::*;
         edges.insert(
@@ -153,22 +153,36 @@ impl Piece {
             .count();
         left_right_flats > 0 && top_bottom_flats > 0
     }
+
+    fn set_edge_as_orientation(&mut self, from: &Orientation, to: &Orientation) {
+        // let i = (to - from + 4) % 4;
+        // self.rotate_by(i);
+    }
 }
 
 struct Puzzle {
-    pieces: Vec<Vec<Piece>>,
+    pieces: Vec<Piece>,
+    rows: usize,
+    cols: usize,
 }
 
 impl Puzzle {
-    fn new(rows: u8, cols: u8) -> Self {
-        let pieces = (0..rows)
-            .map(|row| {
-                (0..cols)
-                    .map(|col| Piece::new(row, col, rows, cols))
-                    .collect()
-            })
-            .collect();
-        Puzzle { pieces }
+    fn new(rows: usize, cols: usize) -> Self {
+        Puzzle {
+            pieces: (0..(rows * cols))
+                .map(|val| Piece::new(val / cols, val % cols, rows, cols))
+                .collect(),
+            rows,
+            cols,
+        }
+    }
+
+    fn get_piece(&self, row: usize, col: usize) -> &Piece {
+        // NOTE: We can optionally use the `get` method if we're not
+        // sure if 'row/col' will be in bounds, which would return an
+        // Option<&Piece>
+        // &self.pieces[row][col]
+        &self.pieces[(row * self.cols) + col]
     }
 
     fn shuffle(&mut self) {
@@ -179,18 +193,40 @@ impl Puzzle {
         let between = Uniform::from(0..4);
         let mut rng = rand::thread_rng();
         between.sample(&mut rng);
-        self.pieces.iter_mut().for_each(|pieces_row| {
-            pieces_row
-                .iter_mut()
-                .for_each(|piece| piece.rotate_by(between.sample(&mut rng)))
-        });
+        // randomly rotate the pieces:
+        self.pieces
+            .iter_mut()
+            .for_each(|piece| piece.rotate_by(between.sample(&mut rng)));
     }
 
-    fn get_piece(&self, row: usize, col: usize) -> &Piece {
-        // NOTE: We can optionally use the `get` method if we're not
-        // sure if 'row/col' will be in bounds, which would return an
-        // Option<&Piece>
-        &self.pieces[row][col]
+    fn solve(&mut self) {
+        use Orientation::*;
+        // build our array of pieces back up again, with the correct
+        // order and orientation:
+
+        // Find the first piece to seed our solution:
+        let top_left_i = self
+            .pieces
+            .iter_mut()
+            .enumerate()
+            .find_map(|(i, piece)| {
+                if let Some(orientation) = piece.edges.iter().find_map(|(orientation, edge)| {
+                    if edge.id == (0, 0, Direction::HORIZONTAL) {
+                        Some(orientation.clone())
+                    } else {
+                        None
+                    }
+                }) {
+                    piece.set_edge_as_orientation(&orientation, &LEFT);
+                    Some(i)
+                } else {
+                    None
+                }
+            })
+            .expect("no top left piece!");
+        self.pieces.swap(0, top_left_i);
+        // iterate through self.pieces, progressively searching for
+        // the next piece that matches our existing piece
     }
 }
 
@@ -218,10 +254,10 @@ fn test_orientation() {
 fn test_piece_orientation() {
     use Orientation::*;
     let mut p = Piece::new(0, 0, 3, 3);
-    let top = p.get_edge(TOP).id;
-    let right = p.get_edge(RIGHT).id;
-    let bottom = p.get_edge(BOTTOM).id;
-    let left = p.get_edge(LEFT).id;
+    let top = p.get_edge(TOP).id.clone();
+    let right = p.get_edge(RIGHT).id.clone();
+    let bottom = p.get_edge(BOTTOM).id.clone();
+    let left = p.get_edge(LEFT).id.clone();
     assert_ne!(p.get_edge(TOP).id, left);
     assert_ne!(p.get_edge(RIGHT).id, top);
     assert_ne!(p.get_edge(BOTTOM).id, right);
@@ -252,6 +288,18 @@ fn test_piece_fits_with() {
         p.get_piece(0, 0)
             .get_edge(BOTTOM)
             .fits_with(p.get_piece(0, 1).get_edge(LEFT)),
+        false
+    );
+    assert_eq!(
+        p.get_piece(0, 2)
+            .get_edge(BOTTOM)
+            .fits_with(p.get_piece(1, 2).get_edge(TOP)),
+        true
+    );
+    assert_eq!(
+        p.get_piece(0, 0)
+            .get_edge(LEFT)
+            .fits_with(p.get_piece(0, 0).get_edge(TOP)),
         false
     );
 }
